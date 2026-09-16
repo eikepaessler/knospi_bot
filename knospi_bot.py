@@ -70,7 +70,7 @@ MOOD_TEMPLATE = {
     "cold": MOODS_DIR / "cold.png",
     "air": MOODS_DIR / "air.png",
 }
-BUBBLE_BOX = (170, 95, 910, 260)  # x0,y0,x1,y1 - Text-sicherer Bereich innerhalb der Füllung
+BUBBLE_BOX = (160, 130, 920, 340)  # x0,y0,x1,y1 - Text-sicherer Bereich innerhalb der Füllung (4:5-Format, 1080x1350)
 
 # ---------------------------------------------------------------------------
 # Sensor-Auswertung (Portierung der band()/buildLive()/applyLive()-Logik der App)
