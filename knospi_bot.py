@@ -4,7 +4,7 @@ Knospi Instagram-Bot
 =====================
 Holt die Sensordaten von Knospi (Forellenbegonie / Begonia maculata),
 bewertet sie mit denselben Schwellenwerten wie die Knospi-App und postet
-bei bestimmten Ereignissen automatisch eine Instagram-Story:
+bei bestimmten Ereignissen automatisch einen Instagram-Feed-Beitrag:
 
   1. Einmal am Tag ein "Hallo" (unabhängig vom Zustand)
   2. Immer wenn ein Wert von "ok" nach "low"/"high" kippt
@@ -22,6 +22,7 @@ markiert):
 
 import json
 import os
+import random
 import subprocess
 import sys
 import time
@@ -120,7 +121,7 @@ def evaluate(reading):
         mood = "cold"
     elif temp_state == "high":
         mood = "cold"
-    elif soil_state == "high":
+    elif soil_state == "high" or hum_state == "high":
         mood = "soggy"
     else:
         mood = "happy"
@@ -128,20 +129,98 @@ def evaluate(reading):
     return {"soil": soil_state, "temp": temp_state, "hum": hum_state, "mood": mood}
 
 
-# Sprüche exakt im Ton der App (says-Logik aus applyLive), um Kälte/Wärme ergänzt
-def says_for(reading, states):
-    soil, temp, hum = reading["soil"], reading["temp"], reading["hum"]
-    if states["soil"] == "low":
-        return f"Meine Erde ist bei {soil:.0f} Prozent — unter 40 wird mir das zu trocken. Ein Schluck, bitte."
-    if states["hum"] == "low":
-        return f"Die Luft hier hat nur {hum:.0f} Prozent. Ich komme aus dem Regenwald, mir ist das zu trocken."
-    if states["temp"] == "low":
-        return f"Nur {temp:.1f} Grad hier — mir wird's langsam kalt. Unter 18 Grad mag ich gar nicht."
-    if states["temp"] == "high":
-        return f"{temp:.1f} Grad sind mir zu warm, dazu noch ohne Zugluft. Etwas kühler, bitte."
-    if states["soil"] == "high":
-        return f"Ganz schön nass hier unten — {soil:.0f} Prozent. Lass mich kurz abtrocknen."
-    return f"Erde bei {soil:.0f} Prozent, Luft passt auch. Punkte sitzen, alles gut."
+# ---------------------------------------------------------------------------
+# Textbausteine: mehrere lustige Varianten pro Situation, damit nicht jeden
+# Tag derselbe Satz kommt. random.choice() pickt jedes Mal neu.
+# Alle Platzhalter ({soil}, {temp}, {hum}) werden mit den echten Messwerten
+# gefüllt, damit die Sprüche trotzdem informativ bleiben.
+# ---------------------------------------------------------------------------
+
+HELLO_TEMPLATES = [
+    "Hallo, hier ist {name}! Erde bei {soil:.0f}%, {temp:.1f}°C, Luft {hum:.0f}% — reicht mir gerade völlig zum Angeben.",
+    "Guten Tag! {name} meldet sich aus der Ecke: {soil:.0f}% Erdfeuchte, alles im grünen Bereich, die silbrigen Punkte glänzen heute besonders.",
+    "Psst, {name} hier. Falls du dich fragst: {temp:.1f}°C, {hum:.0f}% Luftfeuchte — perfekt für ein Nickerchen im Topf.",
+    "{name} reportet vom Fensterbrett: Erde {soil:.0f}%, alles ruhig, keine Dramen heute.",
+    "Ein Hallo von {name}! Ich stehe hier bei {temp:.1f}°C rum und fühle mich, ehrlich gesagt, ziemlich gut.",
+    "Tagesmeldung von {name}: {soil:.0f}% Erde, {hum:.0f}% Luft — genau mein Geschmack.",
+    "Hi, {name} hier — ein kleiner Gruß zwischendurch. Meine Werte? {soil:.0f}% Erde, {temp:.1f}°C. Business as usual.",
+    "Guten Morgen von {name}! Kein Grund zur Sorge heute, nur ein freundliches Hallo aus dem Topf.",
+    "{name} checkt ein: {soil:.0f}% Erde, {temp:.1f}°C. Ein ganz normaler Tag im Leben einer Forellenbegonie.",
+    "Klopf klopf, {name} hier. Nichts Aufregendes, nur {hum:.0f}% Luftfeuchte und gute Laune.",
+]
+
+TIP_TEMPLATES = {
+    "soil_low": [
+        "Meine Erde ist bei {soil:.0f}% — unter 40 wird mir das zu trocken. Ein Schluck, bitte.",
+        "{soil:.0f}% Erdfeuchte und sinkend. Ich fange an, mich wie eine Rosine zu fühlen.",
+        "Hallo? Durst hier! {soil:.0f}% Erde ist mir zu wenig fürs Wohlbefinden.",
+        "Bin bei {soil:.0f}% Erdfeuchte — das ist Wüsten-Niveau für eine Regenwaldpflanze wie mich.",
+        "{soil:.0f}% Erde. Ich hänge schon leicht durch. Gießkanne, bitte melden.",
+    ],
+    "soil_high": [
+        "Ganz schön nass hier unten — {soil:.0f}%. Lass mich kurz abtrocknen.",
+        "{soil:.0f}% Erdfeuchte, meine Wurzeln machen schon Schwimmunterricht. Bitte eine Gießpause.",
+        "Zu viel des Guten: {soil:.0f}% nasse Erde. Ich brauche keinen Pool, danke.",
+        "Bei {soil:.0f}% Erdfeuchte fühle ich mich wie im Sumpf. Kurz trocknen lassen, bitte.",
+    ],
+    "temp_low": [
+        "Nur {temp:.1f} Grad hier — mir wird's langsam kalt. Unter 18 Grad mag ich gar nicht.",
+        "{temp:.1f} Grad?! Wo ist meine Decke. Ich komme aus Brasilien, nicht aus der Antarktis.",
+        "Brr, {temp:.1f} Grad. Ich fröstel hier leise vor mich hin.",
+        "{temp:.1f} Grad sind mir zu frisch. Ein Platz ohne Zugluft wäre jetzt fein.",
+    ],
+    "temp_high": [
+        "{temp:.1f} Grad sind mir zu warm, dazu noch ohne Zugluft. Etwas kühler, bitte.",
+        "Puh, {temp:.1f} Grad — mir wird ganz schwül unter den Blättern.",
+        "Bei {temp:.1f} Grad brauche ich glatt einen kleinen Fächer.",
+    ],
+    "hum_low": [
+        "Die Luft hier hat nur {hum:.0f}%. Ich komme aus dem Regenwald, mir ist das zu trocken.",
+        "{hum:.0f}% Luftfeuchte — meine Blätter fühlen sich an wie Chips.",
+        "Trockene Luft bei {hum:.0f}%. Ein Luftbefeuchter wäre jetzt mein bester Freund.",
+        "Nur {hum:.0f}% Luftfeuchte. Ich vermisse mein feuchtes Zuhause im Regenwald.",
+    ],
+    "hum_high": [
+        "{hum:.0f}% Luftfeuchte — es fühlt sich an wie Dschungel-Dampfsauna hier drin.",
+        "So feucht bei {hum:.0f}%! Fast schon zu viel Regenwald-Feeling für mich.",
+    ],
+}
+
+IMPROVE_TEMPLATES = {
+    "soil": [
+        "Erdfeuchte passt wieder ({soil:.0f}%). Danke fürs Gießen, ich fühl mich gleich lebendiger.",
+        "Ah, {soil:.0f}% Erde — genau richtig. Krise abgewendet.",
+        "{soil:.0f}% Erdfeuchte, wieder im grünen Bereich. Das war knapp.",
+    ],
+    "temp": [
+        "{temp:.1f} Grad — wieder angenehm. Danke fürs Umstellen bzw. Lüften.",
+        "Temperatur passt jetzt ({temp:.1f}°C). Ich taue innerlich auf.",
+        "{temp:.1f} Grad, wieder im Wohlfühlbereich. Sehr angenehm.",
+    ],
+    "hum": [
+        "Luftfeuchte wieder bei {hum:.0f}% — atmet sich gleich besser.",
+        "{hum:.0f}% Luftfeuchte, genau mein Wohlfühlbereich. Danke!",
+        "Endlich wieder {hum:.0f}% Luftfeuchte. Meine Blätter sagen Danke.",
+    ],
+}
+
+
+def hello_message(reading):
+    return random.choice(HELLO_TEMPLATES).format(name=PLANT_NAME, **reading)
+
+
+def tip_message(reading, key, new_state):
+    templates = TIP_TEMPLATES.get(f"{key}_{new_state}")
+    if not templates:
+        return f"{key} kippt nach {new_state} ({reading.get(key)})."
+    return random.choice(templates).format(**reading)
+
+
+def improve_message(reading, key):
+    templates = IMPROVE_TEMPLATES.get(key, [])
+    if not templates:
+        return f"{key} ist wieder okay."
+    return random.choice(templates).format(**reading)
 
 
 MOOD_LABEL = {
@@ -299,7 +378,9 @@ def commit_and_get_public_url(image_path: Path):
 GRAPH_VERSION = "v21.0"
 
 
-def post_story(image_url: str):
+def post_feed_image(image_url: str, caption: str = ""):
+    """Veröffentlicht einen normalen Feed-Beitrag (kein Story).
+    media_type wird bewusst weggelassen -> Graph API Standardwert ist IMAGE."""
     ig_user_id = os.environ["IG_USER_ID"]
     access_token = os.environ["IG_ACCESS_TOKEN"]
 
@@ -307,7 +388,7 @@ def post_story(image_url: str):
         f"https://graph.facebook.com/{GRAPH_VERSION}/{ig_user_id}/media",
         data={
             "image_url": image_url,
-            "media_type": "STORIES",
+            "caption": caption,
             "access_token": access_token,
         },
         timeout=30,
@@ -346,7 +427,7 @@ def main():
 
     if daily_due:
         to_post.append({
-            "text": f"Hallo, hier ist {PLANT_NAME}! " + says_for(reading, states),
+            "text": hello_message(reading),
             "label": "täglicher Hallo-Post",
         })
 
@@ -354,12 +435,12 @@ def main():
         label = {"soil": "Erdfeuchte", "temp": "Temperatur", "hum": "Luftfeuchte"}[key]
         if kind == "tip":
             to_post.append({
-                "text": says_for(reading, states),
+                "text": tip_message(reading, key, new),
                 "label": f"{label} kippt ({old} -> {new})",
             })
         else:
             to_post.append({
-                "text": f"{label} passt wieder. " + says_for(reading, states),
+                "text": improve_message(reading, key),
                 "label": f"{label} verbessert ({old} -> {new})",
             })
 
@@ -382,8 +463,13 @@ def main():
         # Kurze Pause, damit raw.githubusercontent.com das neue Bild sicher ausliefert
         time.sleep(8)
 
-        result = post_story(public_url)
-        print(f"Instagram-Story gepostet: {result}")
+        caption = (
+            f"{post['text']}\n\n"
+            f"🌿 {PLANT_NAME} · {SPECIES_SHORT}\n"
+            f"Erde {reading['soil']:.0f}% · Luft {reading['hum']:.0f}% · {reading['temp']:.1f}°C"
+        )
+        result = post_feed_image(public_url, caption)
+        print(f"Instagram-Beitrag gepostet: {result}")
 
         prev_state = new_state
         daily_due = False  # nur einmal pro Lauf als "Hallo" zählen
