@@ -265,9 +265,14 @@ def decide_events(prev_state, new_states):
 
 def is_new_day(last_daily_iso):
     now_local = datetime.now(LOCAL_TZ)
-    if last_daily_iso is None:
+    if not last_daily_iso:
         return True
-    last = datetime.fromisoformat(last_daily_iso)
+    try:
+        last = datetime.fromisoformat(last_daily_iso)
+    except (ValueError, TypeError):
+        # Ungültiger/kaputter Wert in state.json -> sicherheitshalber wie
+        # "noch nicht heute gepostet" behandeln, statt den Lauf abzubrechen.
+        return True
     return last.astimezone(LOCAL_TZ).date() < now_local.date()
 
 
@@ -393,16 +398,47 @@ def post_feed_image(image_url: str, caption: str = ""):
         },
         timeout=30,
     )
+    if not create_resp.ok:
+        print("Fehlerantwort beim Erstellen des Media-Containers:", create_resp.text)
     create_resp.raise_for_status()
     creation_id = create_resp.json()["id"]
+
+    # Instagram lädt und verarbeitet das Bild von image_url asynchron im
+    # Hintergrund. Vor dem Veröffentlichen muss der Container den Status
+    # "FINISHED" erreichen, sonst schlägt media_publish mit 400 fehl.
+    status = _wait_for_container_ready(ig_user_id, creation_id, access_token)
+    print(f"Media-Container-Status: {status}")
 
     publish_resp = requests.post(
         f"https://graph.facebook.com/{GRAPH_VERSION}/{ig_user_id}/media_publish",
         data={"creation_id": creation_id, "access_token": access_token},
         timeout=30,
     )
+    if not publish_resp.ok:
+        print("Fehlerantwort beim Veröffentlichen:", publish_resp.text)
     publish_resp.raise_for_status()
     return publish_resp.json()
+
+
+def _wait_for_container_ready(ig_user_id, creation_id, access_token, max_attempts=15, delay_seconds=4):
+    """Fragt den Verarbeitungsstatus des Media-Containers ab, bis er
+    FINISHED ist (oder gibt nach max_attempts auf / bricht bei ERROR ab)."""
+    for attempt in range(1, max_attempts + 1):
+        resp = requests.get(
+            f"https://graph.facebook.com/{GRAPH_VERSION}/{creation_id}",
+            params={"fields": "status_code,status", "access_token": access_token},
+            timeout=30,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        status_code = data.get("status_code")
+        if status_code == "FINISHED":
+            return status_code
+        if status_code == "ERROR":
+            raise RuntimeError(f"Instagram konnte das Bild nicht verarbeiten: {data}")
+        print(f"Warte auf Bildverarbeitung durch Instagram ({attempt}/{max_attempts}): {data}")
+        time.sleep(delay_seconds)
+    raise TimeoutError("Media-Container wurde nach mehreren Versuchen nicht FINISHED.")
 
 
 # ---------------------------------------------------------------------------
@@ -460,8 +496,9 @@ def main():
         public_url = commit_and_get_public_url(image_path)
         print(f"Öffentliche Bild-URL: {public_url}")
 
-        # Kurze Pause, damit raw.githubusercontent.com das neue Bild sicher ausliefert
-        time.sleep(8)
+        # Pause, damit raw.githubusercontent.com das neue Bild sicher ausliefert,
+        # bevor Instagram versucht, es abzurufen.
+        time.sleep(15)
 
         caption = (
             f"{post['text']}\n\n"
