@@ -1,0 +1,41 @@
+name: Knospi Instagram Bot
+
+on:
+  schedule:
+    # Alle 15 Minuten. GitHub garantiert den Zeitpunkt nicht exakt,
+    # bei viel Last im Netzwerk kann es ein paar Minuten Verzug geben.
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Nur rendern, nicht wirklich posten"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  check-and-post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Abhängigkeiten installieren
+        run: pip install -r requirements.txt
+
+      - name: Bot ausführen
+        env:
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            python knospi_bot.py --dry-run
+          else
+            python knospi_bot.py
+          fi
