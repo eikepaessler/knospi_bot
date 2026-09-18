@@ -54,7 +54,7 @@ LOCAL_TZ = ZoneInfo("Europe/Berlin")
 # mehrere Stunden Abstand statt der eingestellten 15 Minuten. Fällt an einem
 # Tag kein Lauf in dieses Fenster, entfällt der Hallo-Post für diesen Tag
 # ersatzlos. Bei Bedarf hier einfach breiter stellen (z.B. 13:00-15:00).
-DAILY_WINDOW_START = dtime(13, 0)
+DAILY_WINDOW_START = dtime(14, 0)
 DAILY_WINDOW_END = dtime(16, 0)
 
 STATE_PATH = Path(__file__).parent / "state.json"
