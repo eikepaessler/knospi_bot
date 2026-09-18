@@ -236,10 +236,19 @@ MOOD_LABEL = {
 # State (letzter bekannter Zustand + letztes "Hallo"-Datum)
 # ---------------------------------------------------------------------------
 
+DEFAULT_STATE = {"soil": "ok", "temp": "ok", "hum": "ok", "last_daily": None}
+
+
 def load_state():
     if STATE_PATH.exists():
-        return json.loads(STATE_PATH.read_text())
-    return {"soil": "ok", "temp": "ok", "hum": "ok", "last_daily": None}
+        try:
+            return json.loads(STATE_PATH.read_text())
+        except json.JSONDecodeError as e:
+            # Kaputtes/handbearbeitetes state.json soll den Lauf nicht crashen -
+            # stattdessen mit sicheren Standardwerten weitermachen und warnen.
+            print(f"WARNUNG: state.json ist kein gültiges JSON ({e}). Nutze Standardwerte.")
+            return dict(DEFAULT_STATE)
+    return dict(DEFAULT_STATE)
 
 
 def save_state(state):
@@ -362,15 +371,32 @@ def render_story(reading, states, body_text):
 # erreichbar ist (die Instagram Graph API braucht eine öffentliche Bild-URL, keinen Upload)
 # ---------------------------------------------------------------------------
 
+def _git_configured():
+    subprocess.run(["git", "config", "user.name", "knospi-bot"], check=True)
+    subprocess.run(["git", "config", "user.email", "knospi-bot@users.noreply.github.com"], check=True)
+
+
+def commit_paths(paths, message):
+    """Committet und pusht genau die übergebenen Pfade. Wird für das Bild und
+    (separat, erst NACH einem bestätigten Instagram-Post) für state.json genutzt,
+    damit ein fehlgeschlagener Post niemals als 'erledigt' im Git-Verlauf landet."""
+    _git_configured()
+    subprocess.run(["git", "add", *[str(p) for p in paths]], check=True)
+    # Nichts zu committen (z.B. state.json unverändert) ist kein Fehler.
+    diff = subprocess.run(["git", "diff", "--cached", "--quiet"])
+    if diff.returncode == 0:
+        return
+    subprocess.run(["git", "commit", "-m", message], check=True)
+    subprocess.run(["git", "push"], check=True)
+
+
 def commit_and_get_public_url(image_path: Path):
+    """Committet NUR das Bild (nicht state.json!) und liefert die öffentliche
+    raw.githubusercontent-URL, unter der Instagram es abrufen kann."""
     repo = os.environ["GITHUB_REPOSITORY"]  # z.B. "meinuser/knospi-bot"
     branch = os.environ.get("GITHUB_REF_NAME", "main")
 
-    subprocess.run(["git", "config", "user.name", "knospi-bot"], check=True)
-    subprocess.run(["git", "config", "user.email", "knospi-bot@users.noreply.github.com"], check=True)
-    subprocess.run(["git", "add", str(image_path), str(STATE_PATH)], check=True)
-    subprocess.run(["git", "commit", "-m", f"post: {image_path.name}"], check=True)
-    subprocess.run(["git", "push"], check=True)
+    commit_paths([image_path], f"post: {image_path.name}")
 
     rel_path = image_path.relative_to(Path(__file__).parent)
     return f"https://raw.githubusercontent.com/{repo}/{branch}/{rel_path.as_posix()}"
@@ -488,11 +514,12 @@ def main():
             print("(--dry-run) Kein echter Post, kein Commit.")
             continue
 
-        # Zustand VOR dem Commit aktualisieren, damit state.json mit hochgeladen wird
-        new_state = {"soil": states["soil"], "temp": states["temp"], "hum": states["hum"],
-                     "last_daily": datetime.now(LOCAL_TZ).isoformat() if daily_due else prev_state.get("last_daily")}
-        save_state(new_state)
-
+        # Nur das Bild committen - state.json bleibt bewusst unverändert, bis
+        # Instagram den Post bestätigt hat. Schlägt irgendetwas unten fehl
+        # (Netzwerk, Instagram-Fehler, Timeout beim Verarbeiten), bricht die
+        # Funktion mit einer Exception ab und state.json wurde nie überschrieben
+        # -> der nächste Lauf sieht den Post immer noch als "nicht erledigt" an
+        # und versucht es erneut, statt ihn stillschweigend zu verschlucken.
         public_url = commit_and_get_public_url(image_path)
         print(f"Öffentliche Bild-URL: {public_url}")
 
@@ -507,6 +534,13 @@ def main():
         )
         result = post_feed_image(public_url, caption)
         print(f"Instagram-Beitrag gepostet: {result}")
+
+        # Erst JETZT, nachdem Instagram den Post bestätigt hat, gilt er als
+        # erledigt: state.json aktualisieren und in einem eigenen Commit sichern.
+        new_state = {"soil": states["soil"], "temp": states["temp"], "hum": states["hum"],
+                     "last_daily": datetime.now(LOCAL_TZ).isoformat() if daily_due else prev_state.get("last_daily")}
+        save_state(new_state)
+        commit_paths([STATE_PATH], f"state: {post['label']}")
 
         prev_state = new_state
         daily_due = False  # nur einmal pro Lauf als "Hallo" zählen
