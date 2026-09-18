@@ -26,8 +26,9 @@ import random
 import subprocess
 import sys
 import time
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, time as dtime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import requests
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
@@ -43,8 +44,18 @@ SOIL_LOW, SOIL_HIGH = 40, 80
 TEMP_LOW, TEMP_HIGH = 18, 25
 HUM_LOW, HUM_HIGH = 50, 85
 
-# Berlin-Zeit für den "einmal am Tag"-Post
-LOCAL_TZ = timezone(timedelta(hours=2))  # Sommerzeit; im Winter auf +1 anpassen oder zoneinfo nutzen
+# Berlin-Zeit für den "einmal am Tag"-Post. ZoneInfo statt fixem UTC-Offset,
+# damit die Sommer-/Winterzeit-Umstellung im Oktober automatisch berücksichtigt wird.
+LOCAL_TZ = ZoneInfo("Europe/Berlin")
+
+# Der tägliche "Hallo"-Post soll nicht zu einer beliebigen Uhrzeit kommen,
+# sondern nur, wenn ein Workflow-Lauf in dieses lokale Zeitfenster fällt.
+# Achtung: GitHub drosselt den Cron-Trigger auf wenig aktiven Repos teils auf
+# mehrere Stunden Abstand statt der eingestellten 15 Minuten. Fällt an einem
+# Tag kein Lauf in dieses Fenster, entfällt der Hallo-Post für diesen Tag
+# ersatzlos. Bei Bedarf hier einfach breiter stellen (z.B. 13:00-15:00).
+DAILY_WINDOW_START = dtime(13, 0)
+DAILY_WINDOW_END = dtime(16, 0)
 
 STATE_PATH = Path(__file__).parent / "state.json"
 OUTPUT_DIR = Path(__file__).parent / "output"
@@ -272,8 +283,14 @@ def decide_events(prev_state, new_states):
     return events
 
 
-def is_new_day(last_daily_iso):
+def is_daily_due(last_daily_iso):
+    """True, wenn heute noch kein Hallo-Post raus ist UND die aktuelle lokale
+    Uhrzeit innerhalb von DAILY_WINDOW_START/-END liegt."""
     now_local = datetime.now(LOCAL_TZ)
+
+    if not (DAILY_WINDOW_START <= now_local.time() <= DAILY_WINDOW_END):
+        return False
+
     if not last_daily_iso:
         return True
     try:
@@ -479,7 +496,7 @@ def main():
     prev_state = load_state()
 
     events = decide_events(prev_state, states)
-    daily_due = is_new_day(prev_state.get("last_daily"))
+    daily_due = is_daily_due(prev_state.get("last_daily"))
 
     if not events and not daily_due:
         print("Keine Veränderung und kein täglicher Post fällig – nichts zu tun.")
