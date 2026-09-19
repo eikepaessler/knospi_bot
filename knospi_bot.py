@@ -55,7 +55,7 @@ LOCAL_TZ = ZoneInfo("Europe/Berlin")
 # Tag kein Lauf in dieses Fenster, entfällt der Hallo-Post für diesen Tag
 # ersatzlos. Bei Bedarf hier einfach breiter stellen (z.B. 13:00-15:00).
 DAILY_WINDOW_START = dtime(14, 0)
-DAILY_WINDOW_END = dtime(16, 0)
+DAILY_WINDOW_END = dtime(23, 0)
 
 STATE_PATH = Path(__file__).parent / "state.json"
 OUTPUT_DIR = Path(__file__).parent / "output"
