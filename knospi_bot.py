@@ -54,8 +54,8 @@ LOCAL_TZ = ZoneInfo("Europe/Berlin")
 # mehrere Stunden Abstand statt der eingestellten 15 Minuten. Fällt an einem
 # Tag kein Lauf in dieses Fenster, entfällt der Hallo-Post für diesen Tag
 # ersatzlos. Bei Bedarf hier einfach breiter stellen (z.B. 13:00-15:00).
-DAILY_WINDOW_START = dtime(8, 0)
-DAILY_WINDOW_END = dtime(18, 0)
+DAILY_WINDOW_START = dtime(13, 30)
+DAILY_WINDOW_END = dtime(14, 0)
 
 STATE_PATH = Path(__file__).parent / "state.json"
 OUTPUT_DIR = Path(__file__).parent / "output"
@@ -216,8 +216,37 @@ IMPROVE_TEMPLATES = {
 }
 
 
-def hello_message(reading):
-    return random.choice(HELLO_TEMPLATES).format(name=PLANT_NAME, **reading)
+DAILY_STATUS_TEMPLATES = {
+    "thirsty": [
+        "Hallo, hier ist {name}. Noch immer durstig bei {soil:.0f}% Erde — ich warte weiter auf Wasser.",
+        "{name} meldet sich: leider immer noch zu trocken ({soil:.0f}% Erde). Eine Gießkanne wäre super.",
+        "Kurzes Hallo von {name} — die Erde liegt weiter bei {soil:.0f}%, das ist mir immer noch zu wenig.",
+    ],
+    "soggy": [
+        "Hallo, hier ist {name}. Es ist immer noch ziemlich nass bei mir ({soil:.0f}% Erde) — ich brauch weiter eine Gießpause.",
+        "{name} meldet sich: die Erde ist mit {soil:.0f}% weiter zu feucht. Bitte noch nicht wieder gießen.",
+        "Hallo von {name} — ich stehe immer noch etwas im Nassen ({soil:.0f}% Erde). Geduld, bitte.",
+    ],
+    "cold": [
+        "Hallo, hier ist {name}. Bei {temp:.1f}°C ist es mir weiterhin nicht angenehm — noch nicht besser geworden.",
+        "{name} meldet sich: die Temperatur liegt weiter bei {temp:.1f}°C, das passt mir noch nicht.",
+        "Kurzes Hallo von {name} — {temp:.1f}°C sind für mich immer noch nicht ideal.",
+    ],
+    "air": [
+        "Hallo, hier ist {name}. Die Luft ist weiterhin trocken ({hum:.0f}%) — ein Luftbefeuchter wäre immer noch super.",
+        "{name} meldet sich: {hum:.0f}% Luftfeuchte, das ist mir noch immer zu trocken.",
+        "Hallo von {name} — meine Blätter warten weiter auf mehr Feuchtigkeit ({hum:.0f}% Luft).",
+    ],
+}
+
+
+def hello_message(reading, states):
+    mood = states.get("mood", "happy")
+    templates = DAILY_STATUS_TEMPLATES.get(mood)
+    if not templates:
+        # "happy" (oder unbekannte Stimmung) -> normale, unbeschwerte Hallo-Sprüche
+        templates = HELLO_TEMPLATES
+    return random.choice(templates).format(name=PLANT_NAME, **reading)
 
 
 def tip_message(reading, key, new_state):
@@ -506,7 +535,7 @@ def main():
 
     if daily_due:
         to_post.append({
-            "text": hello_message(reading),
+            "text": hello_message(reading, states),
             "label": "täglicher Hallo-Post",
         })
 
