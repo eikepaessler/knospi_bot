@@ -54,8 +54,8 @@ LOCAL_TZ = ZoneInfo("Europe/Berlin")
 # mehrere Stunden Abstand statt der eingestellten 15 Minuten. Fällt an einem
 # Tag kein Lauf in dieses Fenster, entfällt der Hallo-Post für diesen Tag
 # ersatzlos. Bei Bedarf hier einfach breiter stellen (z.B. 13:00-15:00).
-DAILY_WINDOW_START = dtime(8, 0)
-DAILY_WINDOW_END = dtime(16, 0)
+DAILY_WINDOW_START = dtime(13, 30)
+DAILY_WINDOW_END = dtime(14, 0)
 
 STATE_PATH = Path(__file__).parent / "state.json"
 OUTPUT_DIR = Path(__file__).parent / "output"
@@ -481,15 +481,47 @@ def post_feed_image(image_url: str, caption: str = ""):
     status = _wait_for_container_ready(ig_user_id, creation_id, access_token)
     print(f"Media-Container-Status: {status}")
 
-    publish_resp = requests.post(
-        f"https://graph.facebook.com/{GRAPH_VERSION}/{ig_user_id}/media_publish",
-        data={"creation_id": creation_id, "access_token": access_token},
-        timeout=30,
-    )
-    if not publish_resp.ok:
+    return _publish_with_retry(ig_user_id, creation_id, access_token)
+
+
+def _publish_with_retry(ig_user_id, creation_id, access_token, max_attempts=6, delay_seconds=10):
+    """Veröffentlicht den Media-Container. Obwohl _wait_for_container_ready
+    schon FINISHED gemeldet hat, lehnt Instagram media_publish manchmal
+    trotzdem kurzzeitig mit 'Media ID is not available' (code 9007,
+    error_subcode 2207027) ab - ein bekanntes, dokumentiertes Race-Condition-
+    Verhalten auf Meta-Seite (das Medium ist laut Status fertig, intern aber
+    noch nicht ganz publizierbereit). Genau diesen einen Fehler behandeln wir
+    daher als vorübergehend und versuchen es nach kurzer Pause erneut; jeder
+    andere Fehler schlägt sofort fehl."""
+    last_resp = None
+    for attempt in range(1, max_attempts + 1):
+        publish_resp = requests.post(
+            f"https://graph.facebook.com/{GRAPH_VERSION}/{ig_user_id}/media_publish",
+            data={"creation_id": creation_id, "access_token": access_token},
+            timeout=30,
+        )
+        if publish_resp.ok:
+            return publish_resp.json()
+
+        last_resp = publish_resp
+        try:
+            error = publish_resp.json().get("error", {})
+        except ValueError:
+            error = {}
+
+        is_transient = error.get("code") == 9007 and error.get("error_subcode") == 2207027
+        if is_transient and attempt < max_attempts:
+            print(
+                f"Medien noch nicht publizierbereit (Versuch {attempt}/{max_attempts}), "
+                f"warte {delay_seconds}s und versuche es erneut: {error}"
+            )
+            time.sleep(delay_seconds)
+            continue
+
         print("Fehlerantwort beim Veröffentlichen:", publish_resp.text)
-    publish_resp.raise_for_status()
-    return publish_resp.json()
+        publish_resp.raise_for_status()
+
+    last_resp.raise_for_status()  # pragma: no cover - nur falls Schleife unerwartet ohne return endet
 
 
 def _wait_for_container_ready(ig_user_id, creation_id, access_token, max_attempts=15, delay_seconds=4):
