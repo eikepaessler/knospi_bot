@@ -15,6 +15,12 @@ on:
 permissions:
   contents: write
 
+# Verhindert, dass zwei Läufe gleichzeitig starten (z. B. GitHub-Cron und
+# externer Trigger) und dadurch doppelt posten oder sich beim Speichern in die Quere kommen.
+concurrency:
+  group: knospi-post
+  cancel-in-progress: false
+
 jobs:
   check-and-post:
     runs-on: ubuntu-latest
