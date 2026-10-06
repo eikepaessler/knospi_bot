@@ -26,7 +26,7 @@ import random
 import subprocess
 import sys
 import time
-from datetime import datetime, time as dtime
+from datetime import datetime, timedelta, time as dtime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -56,6 +56,18 @@ LOCAL_TZ = ZoneInfo("Europe/Berlin")
 # ersatzlos. Bei Bedarf hier einfach breiter stellen (z.B. 13:00-15:00).
 DAILY_WINDOW_START = dtime(8, 0)
 DAILY_WINDOW_END = dtime(16, 0)
+
+# Puffer gegen "Flackern" an der Grenze: Ist ein Wert einmal zu niedrig/hoch,
+# gilt er erst wieder als "ok", wenn er um diesen Abstand klar im grünen
+# Bereich liegt (z.B. Erde zu trocken bei <40% -> wieder ok erst ab 43%).
+SOIL_MARGIN = 3     # Prozentpunkte
+HUM_MARGIN = 3      # Prozentpunkte
+TEMP_MARGIN = 1.0   # Grad Celsius
+
+# Mindestabstand, bevor für denselben Wert erneut ein "wird schlecht"-Post
+# kommt. Das "Danke, wieder besser" kommt immer sofort. Dass es ihr weiter
+# schlecht geht, sagt der tägliche Hallo-Post (einmal pro Tag).
+TIP_COOLDOWN_HOURS = 6
 
 STATE_PATH = Path(__file__).parent / "state.json"
 OUTPUT_DIR = Path(__file__).parent / "output"
@@ -119,10 +131,24 @@ def fetch_latest_reading():
     }
 
 
-def evaluate(reading):
-    soil_state = band(reading["soil"], SOIL_LOW, SOIL_HIGH)
-    temp_state = band(reading["temp"], TEMP_LOW, TEMP_HIGH)
-    hum_state = band(reading["hum"], HUM_LOW, HUM_HIGH)
+def band_with_hysteresis(value, lo, hi, prev, margin):
+    """Wie band(), aber mit Puffer: Wer schon 'low'/'high' ist, wird erst
+    wieder 'ok', wenn der Wert um 'margin' klar im grünen Bereich liegt.
+    Verhindert, dass ein Wert, der um die Grenze pendelt, ständig kippt."""
+    if value is None:
+        return "na"
+    if prev == "low" and value < lo + margin:
+        return "low"
+    if prev == "high" and value > hi - margin:
+        return "high"
+    return band(value, lo, hi)
+
+
+def evaluate(reading, prev_state=None):
+    prev_state = prev_state or {}
+    soil_state = band_with_hysteresis(reading["soil"], SOIL_LOW, SOIL_HIGH, prev_state.get("soil"), SOIL_MARGIN)
+    temp_state = band_with_hysteresis(reading["temp"], TEMP_LOW, TEMP_HIGH, prev_state.get("temp"), TEMP_MARGIN)
+    hum_state = band_with_hysteresis(reading["hum"], HUM_LOW, HUM_HIGH, prev_state.get("hum"), HUM_MARGIN)
 
     if soil_state == "low":
         mood = "thirsty"
@@ -276,40 +302,67 @@ MOOD_LABEL = {
 # State (letzter bekannter Zustand + letztes "Hallo"-Datum)
 # ---------------------------------------------------------------------------
 
-DEFAULT_STATE = {"soil": "ok", "temp": "ok", "hum": "ok", "last_daily": None}
+def _default_state():
+    # last_event merkt sich pro Wert, wann zuletzt ein Post dazu raus ging.
+    return {"soil": "ok", "temp": "ok", "hum": "ok", "last_daily": None, "last_event": {}}
 
 
 def load_state():
+    state = _default_state()
     if STATE_PATH.exists():
         try:
-            return json.loads(STATE_PATH.read_text())
+            loaded = json.loads(STATE_PATH.read_text())
         except json.JSONDecodeError as e:
             # Kaputtes/handbearbeitetes state.json soll den Lauf nicht crashen -
             # stattdessen mit sicheren Standardwerten weitermachen und warnen.
             print(f"WARNUNG: state.json ist kein gültiges JSON ({e}). Nutze Standardwerte.")
-            return dict(DEFAULT_STATE)
-    return dict(DEFAULT_STATE)
+            return state
+        if isinstance(loaded, dict):
+            state.update(loaded)  # ältere state.json ohne last_event funktionieren weiter
+        if not isinstance(state.get("last_event"), dict):
+            state["last_event"] = {}
+    return state
 
 
 def save_state(state):
     STATE_PATH.write_text(json.dumps(state, indent=2, ensure_ascii=False))
 
 
-def decide_events(prev_state, new_states):
-    """Liefert eine Liste von ('tip'|'improve', key, from_state, to_state)."""
+def _tip_in_cooldown(prev_state, key, now):
+    """True, wenn zu diesem Wert vor weniger als TIP_COOLDOWN_HOURS zuletzt gepostet wurde."""
+    last_iso = (prev_state.get("last_event") or {}).get(key)
+    if not last_iso:
+        return False
+    try:
+        last = datetime.fromisoformat(last_iso)
+    except (ValueError, TypeError):
+        return False
+    return now - last < timedelta(hours=TIP_COOLDOWN_HOURS)
+
+
+def decide_events(prev_state, new_states, now=None):
+    """Liefert (events, suppressed).
+    events: Liste von ('tip'|'improve', key, from_state, to_state).
+    suppressed: Werte, bei denen ein 'wird schlecht'-Post wegen der Pause
+    (TIP_COOLDOWN_HOURS) noch zurückgehalten wird. Der gespeicherte Zustand
+    bleibt dort unverändert, sodass der Post später nachgeholt wird, falls der
+    Wert dann immer noch schlecht ist."""
+    now = now or datetime.now(LOCAL_TZ)
     events = []
+    suppressed = []
     for key in ("soil", "temp", "hum"):
         old, new = prev_state.get(key, "ok"), new_states[key]
-        if old == new:
+        if old == new or new == "na":
             continue
-        if new in ("low", "high") and old == "ok":
-            events.append(("tip", key, old, new))
+        if new in ("low", "high"):
+            # auch z.B. von zu trocken auf zu nass gesprungen -> zählt als "kippt"
+            if _tip_in_cooldown(prev_state, key, now):
+                suppressed.append(key)
+            else:
+                events.append(("tip", key, old, new))
         elif new == "ok" and old in ("low", "high"):
-            events.append(("improve", key, old, new))
-        elif old in ("low", "high") and new in ("low", "high"):
-            # z.B. von zu trocken auf zu nass gesprungen -> zählt auch als "kippt"
-            events.append(("tip", key, old, new))
-    return events
+            events.append(("improve", key, old, new))  # Danke immer sofort
+    return events, suppressed
 
 
 def is_daily_due(last_daily_iso):
@@ -553,11 +606,15 @@ def main():
     dry_run = "--dry-run" in sys.argv
 
     reading = fetch_latest_reading()
-    states = evaluate(reading)
     prev_state = load_state()
+    states = evaluate(reading, prev_state)
 
-    events = decide_events(prev_state, states)
+    events, suppressed = decide_events(prev_state, states)
     daily_due = is_daily_due(prev_state.get("last_daily"))
+
+    if suppressed:
+        print(f"Pause aktiv: kein neuer 'wird schlecht'-Post für {', '.join(suppressed)} "
+              f"(weniger als {TIP_COOLDOWN_HOURS}h seit dem letzten Post zu diesem Wert).")
 
     if not events and not daily_due:
         print("Keine Veränderung und kein täglicher Post fällig – nichts zu tun.")
@@ -569,6 +626,7 @@ def main():
         to_post.append({
             "text": hello_message(reading, states),
             "label": "täglicher Hallo-Post",
+            "daily": True,
         })
 
     for kind, key, old, new in events:
@@ -577,11 +635,13 @@ def main():
             to_post.append({
                 "text": tip_message(reading, key, new),
                 "label": f"{label} kippt ({old} -> {new})",
+                "key": key,
             })
         else:
             to_post.append({
                 "text": improve_message(reading, key),
                 "label": f"{label} verbessert ({old} -> {new})",
+                "key": key,
             })
 
     for post in to_post:
@@ -615,13 +675,22 @@ def main():
 
         # Erst JETZT, nachdem Instagram den Post bestätigt hat, gilt er als
         # erledigt: state.json aktualisieren und in einem eigenen Commit sichern.
-        new_state = {"soil": states["soil"], "temp": states["temp"], "hum": states["hum"],
-                     "last_daily": datetime.now(LOCAL_TZ).isoformat() if daily_due else prev_state.get("last_daily")}
+        # Nur der Wert, zu dem gerade gepostet wurde, wird übernommen (bzw. das
+        # Hallo-Datum). Alles andere bleibt, wie es war - so geht nichts verloren,
+        # falls ein späterer Post in diesem Lauf scheitert, und zurückgehaltene
+        # Werte (Pause) werden später nachgeholt.
+        now_iso = datetime.now(LOCAL_TZ).isoformat()
+        new_state = dict(prev_state)
+        new_state["last_event"] = dict(prev_state.get("last_event") or {})
+        if post.get("daily"):
+            new_state["last_daily"] = now_iso
+        if post.get("key"):
+            new_state[post["key"]] = states[post["key"]]
+            new_state["last_event"][post["key"]] = now_iso
         save_state(new_state)
         commit_paths([STATE_PATH], f"state: {post['label']}")
 
         prev_state = new_state
-        daily_due = False  # nur einmal pro Lauf als "Hallo" zählen
 
 
 if __name__ == "__main__":
