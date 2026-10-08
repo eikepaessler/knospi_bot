@@ -266,8 +266,39 @@ DAILY_STATUS_TEMPLATES = {
 }
 
 
-def hello_message(reading, states):
+# Wie DAILY_STATUS_TEMPLATES["thirsty"], nur mit Tageszähler ({days}). Wird
+# benutzt, sobald Knospi mindestens den 2. Tag in Folge zu trocken ist.
+DAILY_THIRSTY_DAYS_TEMPLATES = [
+    "Hallo, hier ist {name}. Das ist jetzt der {days}. Tag in Folge ohne Wasser — die Erde liegt bei {soil:.0f}%.",
+    "{name} meldet sich: {days} Tage in Folge kein Wasser, die Erde liegt bei {soil:.0f}%. Langsam wird's echt trocken.",
+    "Kurzes Hallo von {name} — Tag {days} ohne Gießen ({soil:.0f}% Erde). Ich bin noch tapfer, aber nicht mehr lange.",
+]
+
+
+def thirsty_days(prev_state, states, now=None):
+    """Der wievielte Kalendertag in Folge Knospi zu trocken ist (1 = der Tag, an
+    dem sie zu trocken wurde). Gezählt ab dem letzten Erdfeuchte-Post (last_event),
+    also ab dem Moment, in dem der Bot sie als 'zu trocken' gemeldet hat. Wird sie
+    wieder 'ok' (Gießen), beginnt die Zählung beim nächsten Mal von vorn.
+    Gibt None zurück, wenn sie nicht zu trocken ist oder der Startzeitpunkt fehlt."""
+    if states.get("soil") != "low" or prev_state.get("soil") != "low":
+        return None
+    since_iso = (prev_state.get("last_event") or {}).get("soil")
+    if not since_iso:
+        return None
+    try:
+        since = datetime.fromisoformat(since_iso)
+    except (ValueError, TypeError):
+        return None
+    now = now or datetime.now(LOCAL_TZ)
+    return (now.astimezone(LOCAL_TZ).date() - since.astimezone(LOCAL_TZ).date()).days + 1
+
+
+def hello_message(reading, states, days_thirsty=None):
     mood = states.get("mood", "happy")
+    if mood == "thirsty" and days_thirsty and days_thirsty >= 2:
+        templates = DAILY_THIRSTY_DAYS_TEMPLATES
+        return random.choice(templates).format(name=PLANT_NAME, days=days_thirsty, **reading)
     templates = DAILY_STATUS_TEMPLATES.get(mood)
     if not templates:
         # "happy" (oder unbekannte Stimmung) -> normale, unbeschwerte Hallo-Sprüche
@@ -624,7 +655,7 @@ def main():
 
     if daily_due:
         to_post.append({
-            "text": hello_message(reading, states),
+            "text": hello_message(reading, states, thirsty_days(prev_state, states)),
             "label": "täglicher Hallo-Post",
             "daily": True,
         })
