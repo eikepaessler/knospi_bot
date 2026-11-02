@@ -313,11 +313,37 @@ def tip_message(reading, key, new_state):
     return random.choice(templates).format(**reading)
 
 
-def improve_message(reading, key):
+# Kurzer Nachsatz für "Danke"-Posts: Ist nur ein Wert wieder gut, andere aber
+# noch nicht, soll Knospi das dazusagen. Sonst wirkt ein fröhlicher Text neben
+# einem traurigen Gesicht (das Bild zeigt immer die Gesamtstimmung).
+REMAINING_NOTES = {
+    "soil_low": "Mit der Erde ({soil:.0f}%) bin ich aber noch zu durstig.",
+    "soil_high": "Die Erde ist mit {soil:.0f}% aber noch zu nass.",
+    "temp_low": "Bei {temp:.1f}°C friere ich aber noch.",
+    "temp_high": "{temp:.1f}°C sind mir aber noch zu warm.",
+    "hum_low": "Die Luft ({hum:.0f}%) ist aber noch zu trocken.",
+    "hum_high": "Die Luft ({hum:.0f}%) ist aber noch zu feucht.",
+}
+
+
+def improve_message(reading, key, states=None):
     templates = IMPROVE_TEMPLATES.get(key, [])
     if not templates:
-        return f"{key} ist wieder okay."
-    return random.choice(templates).format(**reading)
+        text = f"{key} ist wieder okay."
+    else:
+        text = random.choice(templates).format(**reading)
+
+    # Welche anderen Werte sind noch nicht in Ordnung?
+    notes = []
+    for other in ("soil", "hum", "temp"):
+        if other == key or not states:
+            continue
+        note = REMAINING_NOTES.get(f"{other}_{states.get(other)}")
+        if note:
+            notes.append(note.format(**reading))
+    if notes:
+        text = f"{text} {' '.join(notes)}"
+    return text
 
 
 MOOD_LABEL = {
@@ -670,7 +696,7 @@ def main():
             })
         else:
             to_post.append({
-                "text": improve_message(reading, key),
+                "text": improve_message(reading, key, states),
                 "label": f"{label} verbessert ({old} -> {new})",
                 "key": key,
             })
