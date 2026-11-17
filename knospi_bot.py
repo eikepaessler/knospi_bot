@@ -44,6 +44,13 @@ SOIL_LOW, SOIL_HIGH = 40, 80
 TEMP_LOW, TEMP_HIGH = 18, 25
 HUM_LOW, HUM_HIGH = 50, 85
 
+# Wie in der App: Zu trockene Luft ist nur noch ein Hinweis, kein Problem.
+# Knospi guckt dann freundlich, es gibt keinen "wird schlecht"-/"Danke"-Post
+# dazu und sie zählt nicht als "braucht dich". Im täglichen Hallo-Post erwähnt
+# sie die trockene Luft aber kurz und entspannt. Auf True stellen, wenn trockene
+# Luft wieder als echtes Problem gelten soll.
+HUM_LOW_IS_PROBLEM = False
+
 # Berlin-Zeit für den "einmal am Tag"-Post. ZoneInfo statt fixem UTC-Offset,
 # damit die Sommer-/Winterzeit-Umstellung im Oktober automatisch berücksichtigt wird.
 LOCAL_TZ = ZoneInfo("Europe/Berlin")
@@ -150,6 +157,11 @@ def evaluate(reading, prev_state=None):
     temp_state = band_with_hysteresis(reading["temp"], TEMP_LOW, TEMP_HIGH, prev_state.get("temp"), TEMP_MARGIN)
     hum_state = band_with_hysteresis(reading["hum"], HUM_LOW, HUM_HIGH, prev_state.get("hum"), HUM_MARGIN)
 
+    # Trockene Luft nur als Hinweis: Status bleibt "ok", der Hinweis wird separat gemerkt.
+    hum_hint = hum_state == "low" and not HUM_LOW_IS_PROBLEM
+    if hum_hint:
+        hum_state = "ok"
+
     if soil_state == "low":
         mood = "thirsty"
     elif hum_state == "low":
@@ -163,7 +175,7 @@ def evaluate(reading, prev_state=None):
     else:
         mood = "happy"
 
-    return {"soil": soil_state, "temp": temp_state, "hum": hum_state, "mood": mood}
+    return {"soil": soil_state, "temp": temp_state, "hum": hum_state, "mood": mood, "hum_hint": hum_hint}
 
 
 # ---------------------------------------------------------------------------
@@ -294,11 +306,24 @@ def thirsty_days(prev_state, states, now=None):
     return (now.astimezone(LOCAL_TZ).date() - since.astimezone(LOCAL_TZ).date()).days + 1
 
 
+# Hallo-Sprüche für "sonst alles gut, nur die Luft ist etwas trocken" (nur ein
+# Hinweis, kein Problem). Die normalen Hallo-Sprüche loben teils die Luftfeuchte
+# und passen dann nicht.
+HELLO_AIR_HINT_TEMPLATES = [
+    "Hallo, hier ist {name}! Alles im grünen Bereich, nur die Luft ist mit {hum:.0f}% etwas trocken — halb so wild, ich komm klar.",
+    "{name} meldet sich: Erde {soil:.0f}%, {temp:.1f}°C, mir geht's gut. Die Luft ist mit {hum:.0f}% eher trocken, aber damit kann ich leben.",
+    "Guten Tag von {name}! Kleiner Hinweis am Rande: {hum:.0f}% Luftfeuchte ist nicht mein Traum, aber sonst ist alles prima.",
+    "Psst, {name} hier. Erde passt ({soil:.0f}%), Temperatur auch. Nur die Luft ({hum:.0f}%) könnte etwas feuchter sein — kein Drama.",
+]
+
+
 def hello_message(reading, states, days_thirsty=None):
     mood = states.get("mood", "happy")
     if mood == "thirsty" and days_thirsty and days_thirsty >= 2:
         templates = DAILY_THIRSTY_DAYS_TEMPLATES
         return random.choice(templates).format(name=PLANT_NAME, days=days_thirsty, **reading)
+    if mood == "happy" and states.get("hum_hint"):
+        return random.choice(HELLO_AIR_HINT_TEMPLATES).format(name=PLANT_NAME, **reading)
     templates = DAILY_STATUS_TEMPLATES.get(mood)
     if not templates:
         # "happy" (oder unbekannte Stimmung) -> normale, unbeschwerte Hallo-Sprüche
@@ -664,6 +689,11 @@ def main():
 
     reading = fetch_latest_reading()
     prev_state = load_state()
+    # Altes state.json kann noch "hum": "low" enthalten (aus der Zeit, als trockene
+    # Luft ein Problem war). Ohne diese Korrektur käme ein unsinniger "Luftfeuchte
+    # wieder gut"-Post.
+    if not HUM_LOW_IS_PROBLEM and prev_state.get("hum") == "low":
+        prev_state["hum"] = "ok"
     states = evaluate(reading, prev_state)
 
     events, suppressed = decide_events(prev_state, states)
