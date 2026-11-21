@@ -1,1 +1,1282 @@
-{"entries":[{"id":"beichte-gegossen","pillar":"entertainment","format":"pflanzenbeichte","expression":"thirsty","image_text":"Ich tue nur so. Alles gut.","caption":"Pflanzenbeichte: Ich lasse die Blätter extra dramatisch hängen. Es wirkt jedes Mal.","hashtags":["#pflanzenhumor"]},{"id":"beichte-sonne","pillar":"entertainment","format":"pflanzenbeichte","expression":"happy","image_text":"Ich drehe mich heimlich zum Licht.","caption":"Pflanzenbeichte: Wenn ihr nicht hinschaut, drehe ich mich zur Sonne.","hashtags":["#pflanzenhumor"]},{"id":"beichte-umstellen","pillar":"entertainment","format":"pflanzenbeichte","expression":"dark","image_text":"Umstellen? Bitte nicht schon wieder.","caption":"Pflanzenbeichte: Ich habe mich gerade erst eingelebt.","hashtags":["#pflanzenhumor","#umzug"]},{"id":"beichte-popcorn","pillar":"entertainment","format":"pflanzenbeichte","expression":"happy","image_text":"Ich hab alles gesehen. Und geschwiegen.","caption":"Pflanzenbeichte: Ich weiß, wer heimlich zu viel gießt.","hashtags":["#pflanzenhumor"]},{"id":"beichte-staub","pillar":"entertainment","format":"pflanzenbeichte","expression":"air","image_text":"Staub auf mir? Das ist Charakter.","caption":"Pflanzenbeichte: Ein feuchtes Tuch wäre trotzdem nett.","hashtags":["#pflanzenhumor"]},{"id":"moment-montag","pillar":"entertainment","format":"pflanzenmoment","expression":"happy","image_text":"Montag. Ich wachse einfach weiter.","caption":"Ein kleiner Pflanzenmoment für den Wochenstart.","hashtags":["#montagsmotivation"]},{"id":"moment-regen","pillar":"entertainment","format":"pflanzenmoment","expression":"air","image_text":"Regen draußen, Ruhe drinnen.","caption":"Manche Tage sind einfach Pflanzentage.","hashtags":["#regentag","#zuhause"],"seasons":["autumn","winter"]},{"id":"moment-fensterbank","pillar":"entertainment","format":"pflanzenmoment","expression":"happy","image_text":"Beste Aussicht der Wohnung.","caption":"Mein Platz am Fenster. Ich bin sehr zufrieden damit.","hashtags":["#fensterbank"]},{"id":"moment-neues-blatt","pillar":"entertainment","format":"pflanzenmoment","expression":"happy","image_text":"Neues Blatt. Ich bin sehr stolz.","caption":"Es hat nur drei Wochen gedauert. Aber es ist da.","hashtags":["#neuesblatt","#wachstum"],"cta":"Wann hat eure Pflanze zuletzt ein neues Blatt gezeigt?"},{"id":"moment-sommer","pillar":"entertainment","format":"pflanzenmoment","expression":"thirsty","image_text":"Sommer. Ich nehme noch ein Glas.","caption":"Bei Hitze habe ich öfter Durst. Das ist normal.","hashtags":["#sommerhitze"],"seasons":["summer"]},{"id":"moment-heizung","pillar":"entertainment","format":"pflanzenmoment","expression":"cold","image_text":"Heizung an. Ich bin nur halb begeistert.","caption":"Trockene Heizungsluft ist nicht mein Lieblingswetter.","hashtags":["#heizungsluft"],"seasons":["autumn","winter"]},{"id":"klaert-fingerprobe","pillar":"wissen","format":"knospi_klaert_das","expression":"thirsty","image_text":"Fingerprobe: zwei Zentimeter tief.","caption":"Knospi klärt das: Fühlt sich die Erde dort trocken an, darf gegossen werden.","hashtags":["#giessen","#pflanzentipps"]},{"id":"klaert-staunass","pillar":"wissen","format":"knospi_klaert_das","expression":"soggy","image_text":"Nasse Füße mag niemand.","caption":"Knospi klärt das: Überschüssiges Wasser im Übertopf nach einer Weile ausleeren.","hashtags":["#staunässe","#pflanzentipps"]},{"id":"klaert-licht","pillar":"wissen","format":"knospi_klaert_das","expression":"dark","image_text":"Hell heißt nicht Sonne.","caption":"Knospi klärt das: Viele Pflanzen mögen helles, indirektes Licht.","hashtags":["#licht","#pflanzentipps"]},{"id":"klaert-luft","pillar":"wissen","format":"knospi_klaert_das","expression":"air","image_text":"Luftfeuchte? Ein Hinweis, kein Drama.","caption":"Knospi klärt das: Etwas trockene Luft ist für viele Pflanzen noch okay.","hashtags":["#luftfeuchte"]},{"id":"klaert-kalt","pillar":"wissen","format":"knospi_klaert_das","expression":"cold","image_text":"Zugluft macht mich nervös.","caption":"Knospi klärt das: Fenster kurz lüften, aber nicht direkt neben der Pflanze.","hashtags":["#zugluft","#pflanzentipps"],"seasons":["autumn","winter"]},{"id":"klaert-wasser","pillar":"wissen","format":"knospi_klaert_das","expression":"happy","image_text":"Zimmerwarm gießen. Ich danke euch.","caption":"Knospi klärt das: Wasser darf Raumtemperatur haben. Eiskalt mögen wir nicht.","hashtags":["#giessen"]},{"id":"mythos-sonne","pillar":"wissen","format":"mythos","expression":"dark","image_text":"Mythos: Mehr Sonne ist immer besser.","caption":"Stimmt nicht. Direkte Mittagssonne kann Blätter verbrennen.","hashtags":["#pflanzenmythos"],"cta":"Welchen Pflanzenmythos habt ihr lange geglaubt?"},{"id":"mythos-giessen","pillar":"wissen","format":"mythos","expression":"soggy","image_text":"Mythos: Viel gießen ist viel Liebe.","caption":"Stimmt nicht. Zu viel Wasser ist einer der häufigsten Gründe für Probleme.","hashtags":["#pflanzenmythos","#giessen"]},{"id":"mythos-spruehen","pillar":"wissen","format":"mythos","expression":"air","image_text":"Mythos: Besprühen löst alles.","caption":"Stimmt nur halb. Der Effekt hält meist nur kurz an.","hashtags":["#pflanzenmythos"]},{"id":"mythos-duenger","pillar":"wissen","format":"mythos","expression":"thirsty","image_text":"Mythos: Mehr Dünger, mehr Wachstum.","caption":"Stimmt nicht. Zu viel Dünger belastet die Wurzeln.","hashtags":["#pflanzenmythos","#duenger"],"seasons":["spring","summer"]},{"id":"news-winter","pillar":"wissen","format":"knospi_news","expression":"cold","image_text":"Winter: weniger Wasser, weniger Licht.","caption":"Im Winter wachsen die meisten Pflanzen langsamer und brauchen weniger Wasser.","hashtags":["#winterpflanzen"],"seasons":["winter"]},{"id":"news-fruehling","pillar":"wissen","format":"knospi_news","expression":"happy","image_text":"Frühling: Zeit fürs Umtopfen.","caption":"Wenn die Tage länger werden, starten viele Pflanzen wieder durch.","hashtags":["#fruehling","#umtopfen"],"seasons":["spring"]},{"id":"frag-lieblingspflanze","pillar":"community","format":"frag_knospi","expression":"happy","image_text":"Frag Knospi: Was wollt ihr wissen?","caption":"Schickt mir eure Pflanzenfragen. Ich antworte in einem der nächsten Posts.","hashtags":["#fragknospi"],"cta":"Schreibt eure Frage in die Kommentare."},{"id":"frag-gelbeblatt","pillar":"community","format":"frag_knospi","expression":"thirsty","image_text":"Gelbes Blatt. Was tun?","caption":"Meistens gibt es mehrere Gründe. Erzählt uns, wie eure Pflanze steht.","hashtags":["#fragknospi","#gelbeblaetter"],"cta":"Was macht eure Pflanze gerade?"},{"id":"community-namen","pillar":"community","format":"community","expression":"happy","image_text":"Wie heißt eure Pflanze?","caption":"Knospi sucht Gesellschaft. Verratet uns die schönsten Pflanzennamen.","hashtags":["#pflanzennamen"],"cta":"Schreibt den Namen eurer Pflanze in die Kommentare."},{"id":"community-platz","pillar":"community","format":"community","expression":"happy","image_text":"Zeigt uns euren Lieblingsplatz.","caption":"Wo steht eure Pflanze am liebsten? Fensterbank, Regal, Bad?","hashtags":["#pflanzenplatz"],"cta":"Teilt euren Pflanzenplatz mit uns."},{"id":"community-giessrunde","pillar":"community","format":"giessrunde","expression":"thirsty","image_text":"Gießrunde: Wer hat heute dran?","caption":"Ein kleiner Erinnerungsmoment für alle, die gerade an ihre Pflanzen denken.","hashtags":["#giessrunde"]},{"id":"app-sensor","pillar":"app","format":"behind_the_scenes","expression":"happy","image_text":"Der Sensor misst. Ich muss nicht raten.","caption":"Fünf Werte, ein Blick: Erde, Licht, Temperatur, Luft und Nährstoffe.","hashtags":["#pflanzensensor","#smartplants"],"cta":"Mehr über das Pflanzentamagotchi findet ihr in unserem Profil."},{"id":"app-foto","pillar":"app","format":"behind_the_scenes","expression":"happy","image_text":"Foto machen, Pflanze erkennen.","caption":"In der App erkennt ihr eure Pflanze per Foto und gebt ihr einen Namen.","hashtags":["#pflanzenapp"],"cta":"Welchen Namen würdet ihr vergeben?"},{"id":"app-beduerfnisse","pillar":"app","format":"behind_the_scenes","expression":"thirsty","image_text":"Sie sagt, wenn sie etwas braucht.","caption":"Jede Pflanze zeigt in der App, ob es ihr gut geht. Wie ein kleines Tamagotchi.","hashtags":["#pflanzentamagotchi"]},{"id":"app-geschenk","pillar":"app","format":"geschenk","expression":"happy","image_text":"Pflanze plus Sensor. Perfektes Geschenk.","caption":"Das Bundle für alle, die jemandem eine Freude machen wollen.","hashtags":["#geschenkidee"],"cta":"Mehr dazu in unserem Profil."},{"id":"app-raeume","pillar":"app","format":"behind_the_scenes","expression":"happy","image_text":"Jede Pflanze bekommt ihren Raum.","caption":"Wohnzimmer, Küche, Büro: In der App behaltet ihr den Überblick.","hashtags":["#pflanzenapp"]},{"id":"wg-meeting-1","pillar":"entertainment","format":"wg_meeting","scene":{"cast":[{"char":"moni","expression":"durstig"},{"char":"pepe","expression":"froh"},{"char":"siggi","expression":"froh"},{"char":"cleo","expression":"skeptisch"}],"lines":[{"char":"moni","text":"Wer hat mein Licht geklaut?!"},{"char":"pepe","text":"Niemand. Du stehst im Schatten."},{"char":"siggi","text":"Hm."}]},"caption":"WG-Meeting: Moni hat Fragen. Die anderen haben wenig Lust darauf.","hashtags":["#pflanzenwg"]},{"id":"wg-meeting-2","pillar":"entertainment","format":"wg_meeting","scene":{"cast":[{"char":"cleo","expression":"traurig"},{"char":"pepe","expression":"froh"},{"char":"siggi","expression":"schlaeft"}],"lines":[{"char":"cleo","text":"Es ist so trocken hier."},{"char":"pepe","text":"Du sagst das jeden Tag."},{"char":"siggi","text":"Gieß mich nicht. Frag mich nicht."}]},"caption":"WG-Meeting: Cleo hat Meinungen zur Luftfeuchte.","hashtags":["#pflanzenwg","#calathea"]},{"id":"wg-comic-1","pillar":"entertainment","format":"wg_comic","scene":{"cast":[{"char":"pepe","expression":"genervt"},{"char":"moni","expression":"durstig"}],"lines":[{"char":"moni","text":"Ich verdurste. Wirklich."},{"char":"pepe","text":"Du wurdest gestern gegossen."}]},"caption":"Pepe hat für Drama gerade keine Nerven.","hashtags":["#pflanzenwg","#kaktus"]},{"id":"wg-comic-2","pillar":"entertainment","format":"wg_comic","scene":{"cast":[{"char":"siggi","expression":"froh"},{"char":"cleo","expression":"durstig"}],"lines":[{"char":"cleo","text":"Kein Licht, keine Liebe, kein Leben!"},{"char":"siggi","text":"Ich bin auch im Flur."}]},"caption":"Siggi bleibt entspannt. Immer.","hashtags":["#pflanzenwg","#sansevieria"]},{"id":"wg-comic-3","pillar":"entertainment","format":"wg_comic","scene":{"cast":[{"char":"moni","expression":"froh"},{"char":"pepe","expression":"ueberrascht"},{"char":"siggi","expression":"froh"}],"lines":[{"char":"moni","text":"Ich habe ein neues Blatt!"},{"char":"pepe","text":"Schon wieder?"},{"char":"siggi","text":"Schön."}]},"caption":"Moni hat Neuigkeiten. Alle freuen sich. Fast alle.","hashtags":["#pflanzenwg","#monstera"],"cta":"Wer in der WG ist eurer Pflanze am ähnlichsten?"},{"id":"wg-bts-1","pillar":"entertainment","format":"behind_the_scenes","scene":{"cast":[{"char":"knospi","expression":"froh"},{"char":"moni","expression":"froh"},{"char":"cleo","expression":"froh"}],"lines":[{"char":"moni","text":"Knospi hat einen Sensor."},{"char":"cleo","text":"Ich will auch Messwerte!"}]},"caption":"Nur Knospi hat einen Sensor. Die anderen sind leicht neidisch.","hashtags":["#pflanzenwg","#sensor"]},{"id":"wg-bts-2","pillar":"app","format":"behind_the_scenes","scene":{"cast":[{"char":"knospi","expression":"zwinkert"},{"char":"pepe","expression":"froh"},{"char":"siggi","expression":"froh"}],"lines":[{"char":"knospi","text":"Ich sage Bescheid, wenn ich was brauche."},{"char":"pepe","text":"Angeberin."}]},"caption":"Knospi erklärt, wie der Sensor ihr hilft.","hashtags":["#pflanzenwg","#pflanzensensor"],"cta":"Mehr zur App findet ihr in unserem Profil."},{"id":"wg-wissen-1","pillar":"wissen","format":"wg_meeting","scene":{"cast":[{"char":"pepe","expression":"froh"},{"char":"moni","expression":"skeptisch"}],"lines":[{"char":"moni","text":"Warum gießt du mich nicht mehr?"},{"char":"pepe","text":"Winter. Weniger Wasser."}]},"caption":"WG-Wissen: Im Winter brauchen viele Pflanzen weniger Wasser.","hashtags":["#pflanzenwg","#winterpflanzen"],"seasons":["winter"]},{"id":"wg-wissen-2","pillar":"wissen","format":"wg_meeting","scene":{"cast":[{"char":"cleo","expression":"skeptisch"},{"char":"siggi","expression":"froh"}],"lines":[{"char":"cleo","text":"Ist Zugluft schlimm?"},{"char":"siggi","text":"Für dich ja."}]},"caption":"WG-Wissen: Calatheen mögen keine Zugluft.","hashtags":["#pflanzenwg","#calathea"]},{"id":"wg-community-1","pillar":"community","format":"wg_meeting","scene":{"cast":[{"char":"moni","expression":"froh"},{"char":"pepe","expression":"froh"},{"char":"siggi","expression":"schlaeft"},{"char":"cleo","expression":"froh"}],"lines":[{"char":"moni","text":"Wir brauchen mehr Mitbewohner!"},{"char":"pepe","text":"Bitte nicht."},{"char":"cleo","text":"Doch!"}]},"caption":"Die WG sucht Zuwachs. Welche Pflanze sollte einziehen?","hashtags":["#pflanzenwg"],"cta":"Welche Pflanze sollte als Nächstes einziehen?"},{"id":"wg-comic-4","pillar":"entertainment","format":"wg_comic","scene":{"cast":[{"char":"siggi","expression":"schlaeft"},{"char":"moni","expression":"durstig"},{"char":"pepe","expression":"lacht"}],"lines":[{"char":"moni","text":"Ich glaube, ich welke!"},{"char":"pepe","text":"Du hast ein Blatt verloren."},{"char":"siggi","text":"Zzz."}]},"caption":"Moni übertreibt. Das ist ihr Hobby.","hashtags":["#pflanzenwg"]},{"id":"wg-giess-1","pillar":"community","format":"giessrunde","scene":{"cast":[{"char":"moni","expression":"froh"},{"char":"pepe","expression":"froh"},{"char":"siggi","expression":"froh"},{"char":"cleo","expression":"froh"}],"lines":[{"char":"moni","text":"Gießrunde! Ich bin zuerst dran."},{"char":"pepe","text":"Ich nicht. Wirklich nicht."}]},"caption":"Gießrunde in der WG. Nicht jede Pflanze freut sich darüber.","hashtags":["#pflanzenwg","#giessrunde"]}]}
+{
+  "entries": [
+    {
+      "id": "du-hast-geguckt",
+      "pillar": "entertainment",
+      "format": "pflanzenbeichte",
+      "expression": "thirsty",
+      "image_text": "Du hast geguckt. Nicht gegossen.",
+      "caption": "Ich sag nichts. Ich hänge nur sehr laut.",
+      "hashtags": [
+        "#pflanzenhumor"
+      ]
+    },
+    {
+      "id": "neue-pflanze",
+      "pillar": "entertainment",
+      "format": "pflanzenbeichte",
+      "expression": "air",
+      "image_text": "Wer ist die Neue auf dem Fensterbrett?",
+      "caption": "Ich bin nicht eifersüchtig. Ich wachse nur sehr bedeutungsvoll in ihre Richtung.",
+      "hashtags": [
+        "#pflanzenhumor",
+        "#fensterbank"
+      ],
+      "cta": "Ist bei dir auch gerade eine Neue eingezogen?"
+    },
+    {
+      "id": "danke-geblieben",
+      "pillar": "entertainment",
+      "format": "pflanzenmoment",
+      "expression": "happy",
+      "image_text": "Danke, dass du geblieben bist.",
+      "caption": "Auch an den Tagen, an denen ich nur gelbe Blätter hatte.",
+      "hashtags": [
+        "#danke"
+      ]
+    },
+    {
+      "id": "umgestellt",
+      "pillar": "entertainment",
+      "format": "pflanzenbeichte",
+      "expression": "cold",
+      "image_text": "Du hast mich umgestellt. Wir müssen reden.",
+      "caption": "Gestern stand ich links. Heute rechts. Ich brauche eine Minute für meine Gefühle.",
+      "hashtags": [
+        "#pflanzenhumor",
+        "#umzug"
+      ]
+    },
+    {
+      "id": "urlaub",
+      "pillar": "entertainment",
+      "format": "pflanzenbeichte",
+      "expression": "thirsty",
+      "image_text": "Zwei Wochen? Ich schreibe mein Testament.",
+      "caption": "Gieß mich vorher kurz, dann überlebe ich das. Die Dramatik genieße ich trotzdem.",
+      "hashtags": [
+        "#pflanzenhumor",
+        "#urlaub"
+      ]
+    },
+    {
+      "id": "neues-blatt",
+      "pillar": "entertainment",
+      "format": "pflanzenmoment",
+      "expression": "happy",
+      "image_text": "Neues Blatt. Applaus bitte.",
+      "caption": "Drei Wochen Training. Niemand hat gefragt. Ich erzähle es trotzdem allen.",
+      "hashtags": [
+        "#neuesblatt",
+        "#wachstum"
+      ],
+      "cta": "Wann hat deine Pflanze zuletzt ein neues Blatt gezeigt?"
+    },
+    {
+      "id": "fotos",
+      "pillar": "entertainment",
+      "format": "pflanzenbeichte",
+      "expression": "happy",
+      "image_text": "Dein Handy hat mehr Fotos von mir.",
+      "caption": "Mehr als ich Blätter habe. Ich bin ein Naturtalent. Ich weiß.",
+      "hashtags": [
+        "#pflanzenhumor"
+      ]
+    },
+    {
+      "id": "montag",
+      "pillar": "entertainment",
+      "format": "pflanzenmoment",
+      "expression": "dark",
+      "image_text": "Montag. Ich bin auch nicht bereit.",
+      "caption": "Ich stehe trotzdem da und sehe gut aus. Das schaffst du auch.",
+      "hashtags": [
+        "#montagsmotivation"
+      ]
+    },
+    {
+      "id": "guten-morgen",
+      "pillar": "entertainment",
+      "format": "pflanzenmoment",
+      "expression": "happy",
+      "image_text": "Du sagtest Guten Morgen. Ich spürte es.",
+      "caption": "Ob Pflanzen zuhören, weiß keiner. Ich sage nur: Es schadet nicht.",
+      "hashtags": [
+        "#pflanzenliebe2"
+      ]
+    },
+    {
+      "id": "patina",
+      "pillar": "entertainment",
+      "format": "pflanzenbeichte",
+      "expression": "air",
+      "image_text": "Das ist kein Staub. Das ist Patina.",
+      "caption": "Ein feuchtes Tuch lehne ich trotzdem nicht ab. Mit Liebe, bitte.",
+      "hashtags": [
+        "#pflanzenhumor"
+      ]
+    },
+    {
+      "id": "fuenf-minuten-sonne",
+      "pillar": "entertainment",
+      "format": "pflanzenmoment",
+      "expression": "happy",
+      "image_text": "Fünf Minuten Sonne. Beste Zeit meines Lebens.",
+      "caption": "Ich will nichts versprechen, aber ich glaube, ich bin verliebt. In ein Fenster.",
+      "hashtags": [
+        "#fensterbank"
+      ]
+    },
+    {
+      "id": "heizung",
+      "pillar": "entertainment",
+      "format": "pflanzenmoment",
+      "expression": "air",
+      "image_text": "Heizung an. Meine Blätter knistern.",
+      "caption": "Trockene Luft ist kein Weltuntergang. Eine Schale Wasser in der Nähe hilft mir schon.",
+      "hashtags": [
+        "#heizungsluft"
+      ],
+      "seasons": [
+        "autumn",
+        "winter"
+      ]
+    },
+    {
+      "id": "sommerhitze",
+      "pillar": "entertainment",
+      "format": "pflanzenmoment",
+      "expression": "thirsty",
+      "image_text": "Hitze! Ich nehme gerne noch eins.",
+      "caption": "Im Sommer verdunsten wir mehr. Wirf öfter mal einen Blick auf die Erde.",
+      "hashtags": [
+        "#sommerhitze"
+      ],
+      "seasons": [
+        "summer"
+      ]
+    },
+    {
+      "id": "regentag",
+      "pillar": "entertainment",
+      "format": "pflanzenmoment",
+      "expression": "dark",
+      "image_text": "Draußen Regen. Drinnen Ruhe.",
+      "caption": "Ein guter Tag, um einfach da zu sein und nichts zu müssen.",
+      "hashtags": [
+        "#regentag",
+        "#zuhause"
+      ],
+      "seasons": [
+        "autumn",
+        "winter"
+      ]
+    },
+    {
+      "id": "nicht-noch-ein-schluck",
+      "pillar": "entertainment",
+      "format": "pflanzenbeichte",
+      "expression": "soggy",
+      "image_text": "Bitte nicht noch ein Schluck.",
+      "caption": "Ich liebe dich, aber meine Füße sind nass. Lass mich erst trocknen.",
+      "hashtags": [
+        "#pflanzenhumor",
+        "#giessen"
+      ]
+    },
+    {
+      "id": "zugluft-alter",
+      "pillar": "entertainment",
+      "format": "pflanzenbeichte",
+      "expression": "cold",
+      "image_text": "Zugluft? In meinem Alter?",
+      "caption": "Kurz lüften ist okay. Aber bitte nicht direkt auf mich.",
+      "hashtags": [
+        "#pflanzenhumor",
+        "#zugluft"
+      ],
+      "seasons": [
+        "autumn",
+        "winter"
+      ]
+    },
+    {
+      "id": "klaert-fingerprobe",
+      "pillar": "wissen",
+      "format": "knospi_klaert_das",
+      "expression": "thirsty",
+      "image_text": "Erde trocken? Finger rein, zwei Zentimeter.",
+      "caption": "Die Fingerprobe ist der einfachste Test, ob deine Pflanze Durst hat. Steck den Finger etwa zwei Zentimeter tief in die Erde. Fühlt sie sich trocken an, darf gegossen werden. Ist sie noch feucht, wartest du einen Tag und prüfst erneut. Pflanzen, die es gern trockener mögen, bekommen etwas mehr Geduld.",
+      "hashtags": [
+        "#giessen",
+        "#pflanzentipps"
+      ]
+    },
+    {
+      "id": "klaert-staunaesse",
+      "pillar": "wissen",
+      "format": "knospi_klaert_das",
+      "expression": "soggy",
+      "image_text": "Nasse Füße mag niemand.",
+      "caption": "Steht nach dem Gießen Wasser im Übertopf, leere es nach etwa einer halben Stunde aus. Bleibt die Erde dauerhaft nass, bekommen die Wurzeln keine Luft und können faulen. Typische Zeichen sind gelbe Blätter und Erde, die nie richtig trocknet. Dann hilft es, das Gießen zu pausieren und gegebenenfalls umzutopfen. Ein Topf mit Abzugsloch ist die beste Vorbeugung.",
+      "hashtags": [
+        "#staunaesse",
+        "#pflanzentipps"
+      ]
+    },
+    {
+      "id": "klaert-licht",
+      "pillar": "wissen",
+      "format": "knospi_klaert_das",
+      "expression": "dark",
+      "image_text": "Hell ist nicht gleich Sonne.",
+      "caption": "Viele Zimmerpflanzen mögen viel Helligkeit, aber keine pralle Sonne. Direkte Mittagssonne hinter Glas kann Blätter verbrennen. Ein guter Platz ist am Fenster mit etwas Abstand oder hinter einem dünnen Vorhang. Ein einfacher Test: Wirft deine Hand einen weichen Schatten, ist das Licht für die meisten Pflanzen angenehm.",
+      "hashtags": [
+        "#licht",
+        "#pflanzentipps"
+      ]
+    },
+    {
+      "id": "klaert-luftfeuchte",
+      "pillar": "wissen",
+      "format": "knospi_klaert_das",
+      "expression": "air",
+      "image_text": "Trockene Luft? Meist halb so wild.",
+      "caption": "Viele Zimmerpflanzen kommen mit normaler Wohnungsluft gut zurecht. Braune, trockene Blattspitzen können ein Hinweis auf zu trockene Luft sein, haben aber manchmal auch andere Gründe. Besprühen hilft nur kurz. Besser sind mehrere Pflanzen nah beieinander, eine Schale Wasser in der Nähe oder ein Luftbefeuchter. Empfindliche Arten wie Calathea freuen sich darüber am meisten.",
+      "hashtags": [
+        "#luftfeuchte",
+        "#pflanzentipps"
+      ]
+    },
+    {
+      "id": "klaert-zugluft",
+      "pillar": "wissen",
+      "format": "knospi_klaert_das",
+      "expression": "cold",
+      "image_text": "Zugluft macht mich nervös.",
+      "caption": "Kalte Luftzüge stressen viele Zimmerpflanzen, besonders im Winter. Typische Folgen sind eingerollte oder abgeworfene Blätter. Lüfte kurz und kräftig, aber stelle die Pflanze nicht direkt ans geöffnete Fenster oder an die Tür. Auch warme Heizungsluft direkt unter den Blättern mögen die meisten nicht.",
+      "hashtags": [
+        "#zugluft",
+        "#pflanzentipps"
+      ],
+      "seasons": [
+        "autumn",
+        "winter"
+      ]
+    },
+    {
+      "id": "klaert-wasser",
+      "pillar": "wissen",
+      "format": "knospi_klaert_das",
+      "expression": "happy",
+      "image_text": "Zimmerwarm gießen, bitte.",
+      "caption": "Gieße mit Wasser auf Zimmertemperatur. Eiskaltes Wasser kann die Wurzeln schocken. Gieße lieber gründlich und dafür seltener, statt jeden Tag einen kleinen Schluck. So wachsen die Wurzeln tiefer und die Pflanze wird robuster.",
+      "hashtags": [
+        "#giessen",
+        "#pflanzentipps"
+      ]
+    },
+    {
+      "id": "klaert-umtopfen",
+      "pillar": "wissen",
+      "format": "knospi_klaert_das",
+      "expression": "happy",
+      "image_text": "Wurzeln im Abzugsloch. Ich will umziehen.",
+      "caption": "Wachsen Wurzeln unten aus dem Topf oder hält die Erde nach dem Gießen kaum noch Wasser, ist der Topf zu klein. Dann ist ein Umzug fällig, am besten im Frühjahr. Wähle einen Topf, der nur zwei bis drei Zentimeter größer ist, und achte auf ein Abzugsloch.",
+      "hashtags": [
+        "#umtopfen",
+        "#pflanzentipps"
+      ]
+    },
+    {
+      "id": "klaert-forellenbegonie",
+      "pillar": "wissen",
+      "format": "knospi_klaert_das",
+      "expression": "happy",
+      "image_text": "Ich bin eine Forellenbegonie. Wegen der Punkte.",
+      "caption": "Die Begonia maculata stammt aus Brasilien und hat ihre silbernen Punkte wie ein Forellenmuster auf den Blättern. Sie mag helles, indirektes Licht, Temperaturen zwischen 18 und 25 Grad und Erde, die weder austrocknet noch nass bleibt. Auch etwas höhere Luftfeuchte findet sie gut.",
+      "hashtags": [
+        "#forellenbegonie",
+        "#begoniamaculata"
+      ]
+    },
+    {
+      "id": "mythos-sonne",
+      "pillar": "wissen",
+      "format": "mythos",
+      "expression": "cold",
+      "image_text": "Mythos: Mehr Sonne ist besser.",
+      "caption": "Stimmt nicht. Viele Zimmerpflanzen stammen aus dem Unterholz und kennen nur gefiltertes Licht. Direkte Sonne kann Blätter verbrennen, erkennbar an hellbraunen, trockenen Flecken. Ein dünner Vorhang oder ein Platz einen Meter weiter weg schafft Abhilfe.",
+      "hashtags": [
+        "#pflanzenmythos"
+      ],
+      "cta": "Welchen Pflanzenmythos hast du lange geglaubt?"
+    },
+    {
+      "id": "mythos-giessen",
+      "pillar": "wissen",
+      "format": "mythos",
+      "expression": "soggy",
+      "image_text": "Mythos: Viel gießen heißt viel Liebe.",
+      "caption": "Stimmt nicht. Zu viel Wasser ist einer der häufigsten Gründe, warum Zimmerpflanzen eingehen. Die Wurzeln brauchen neben Wasser auch Luft. Gieße erst, wenn die oberste Erdschicht trocken ist. Das ist keine Vernachlässigung, sondern Fürsorge.",
+      "hashtags": [
+        "#pflanzenmythos",
+        "#giessen"
+      ]
+    },
+    {
+      "id": "mythos-spruehen",
+      "pillar": "wissen",
+      "format": "mythos",
+      "expression": "air",
+      "image_text": "Mythos: Besprühen löst alles.",
+      "caption": "Stimmt nur halb. Beim Besprühen steigt die Luftfeuchte nur für wenige Minuten. Nasse Blätter können außerdem Pilze begünstigen, vor allem bei wenig Licht. Wirksamer sind ein Luftbefeuchter oder mehrere Pflanzen dicht beieinander.",
+      "hashtags": [
+        "#pflanzenmythos",
+        "#luftfeuchte"
+      ]
+    },
+    {
+      "id": "mythos-duenger",
+      "pillar": "wissen",
+      "format": "mythos",
+      "expression": "cold",
+      "image_text": "Mythos: Mehr Dünger, mehr Wachstum.",
+      "caption": "Stimmt nicht. Zu viel Dünger lässt Salze in der Erde ansteigen und kann die Wurzeln schädigen. Dünge nur in der Wachstumszeit, etwa von April bis September, und eher schwächer als auf der Packung angegeben. Im Winter machen die meisten Pflanzen Pause.",
+      "hashtags": [
+        "#pflanzenmythos",
+        "#duenger"
+      ],
+      "seasons": [
+        "spring",
+        "summer"
+      ]
+    },
+    {
+      "id": "mythos-musik",
+      "pillar": "wissen",
+      "format": "mythos",
+      "expression": "happy",
+      "image_text": "Mythos: Pflanzen lieben Mozart.",
+      "caption": "Wissenschaftlich nicht belegt. Pflanzen haben keine Ohren, spüren aber Erschütterungen. Dein Guten Morgen schadet trotzdem nicht. Es hilft vor allem dir, öfter nach ihr zu schauen.",
+      "hashtags": [
+        "#pflanzenmythos"
+      ]
+    },
+    {
+      "id": "news-winter",
+      "pillar": "wissen",
+      "format": "knospi_news",
+      "expression": "cold",
+      "image_text": "Winter: weniger Wasser, weniger Licht.",
+      "caption": "Im Winter wachsen die meisten Zimmerpflanzen langsamer oder pausieren ganz. Sie verbrauchen weniger Wasser, du gießt also seltener. Prüfe aber weiter mit der Fingerprobe. Dünger kannst du bis zum Frühjahr weglassen. Ein heller Platz ist jetzt besonders wichtig, weil die Tage kurz sind.",
+      "hashtags": [
+        "#winterpflanzen"
+      ],
+      "seasons": [
+        "winter"
+      ]
+    },
+    {
+      "id": "news-fruehling",
+      "pillar": "wissen",
+      "format": "knospi_news",
+      "expression": "happy",
+      "image_text": "Frühling: Zeit fürs Umtopfen.",
+      "caption": "Wenn die Tage länger werden, starten viele Pflanzen durch. Das ist der beste Zeitpunkt zum Umtopfen. Nimm einen Topf, der nur zwei bis drei Zentimeter größer ist, und achte auf ein Abzugsloch. Düngen musst du in den ersten Wochen nicht, frische Erde enthält genug Nährstoffe.",
+      "hashtags": [
+        "#fruehling",
+        "#umtopfen"
+      ],
+      "seasons": [
+        "spring"
+      ]
+    },
+    {
+      "id": "frag-knospi",
+      "pillar": "community",
+      "format": "frag_knospi",
+      "expression": "happy",
+      "image_text": "Frag Knospi: Was willst du wissen?",
+      "caption": "Schick mir deine Pflanzenfragen. Ich suche die besten aus und antworte in einem der nächsten Posts.",
+      "hashtags": [
+        "#fragknospi"
+      ],
+      "cta": "Schreib deine Frage in die Kommentare."
+    },
+    {
+      "id": "frag-gelbes-blatt",
+      "pillar": "community",
+      "format": "frag_knospi",
+      "expression": "air",
+      "image_text": "Gelbes Blatt. Was tun?",
+      "caption": "Ein gelbes Blatt ist ein Hinweis, keine Diagnose. Meistens steckt zu viel Wasser dahinter, manchmal auch zu wenig Licht oder ein ganz normaler Blattwechsel. Prüfe zuerst die Erde: Ist sie dauernd nass, pausiere das Gießen.",
+      "hashtags": [
+        "#fragknospi",
+        "#gelbeblaetter"
+      ],
+      "cta": "Wo steht deine Pflanze und wie oft gießt du?"
+    },
+    {
+      "id": "community-namen",
+      "pillar": "community",
+      "format": "community",
+      "expression": "happy",
+      "image_text": "Wie heißt deine Pflanze?",
+      "caption": "Moni, Pepe, Siggi, Cleo und ich suchen Verstärkung. Verrate uns die schönsten Pflanzennamen.",
+      "hashtags": [
+        "#pflanzennamen"
+      ],
+      "cta": "Schreib den Namen deiner Pflanze in die Kommentare."
+    },
+    {
+      "id": "community-lieblingsplatz",
+      "pillar": "community",
+      "format": "community",
+      "expression": "happy",
+      "image_text": "Zeig uns deinen Lieblingsplatz.",
+      "caption": "Fensterbank, Regal oder Badezimmer? Erzähl uns, wo deine Pflanze am liebsten steht.",
+      "hashtags": [
+        "#pflanzenplatz"
+      ],
+      "cta": "Teile deinen Pflanzenplatz mit uns."
+    },
+    {
+      "id": "giessrunde",
+      "pillar": "community",
+      "format": "giessrunde",
+      "expression": "thirsty",
+      "image_text": "Gießrunde: Wer ist heute dran?",
+      "caption": "Ein kleiner Erinnerungsmoment für alle, die gerade an ihre Pflanzen denken. Deine wartet schon.",
+      "hashtags": [
+        "#giessrunde"
+      ]
+    },
+    {
+      "id": "pflanzenmensch",
+      "pillar": "community",
+      "format": "community",
+      "expression": "happy",
+      "image_text": "Du bist ein guter Pflanzenmensch.",
+      "caption": "Auch wenn mal eine Pflanze eingegangen ist. Das passiert jedem. Wichtig ist, dass du es wieder versuchst.",
+      "hashtags": [
+        "#pflanzenliebe2",
+        "#danke"
+      ],
+      "cta": "Welche Pflanze hat dir am meisten beigebracht?"
+    },
+    {
+      "id": "app-sensor",
+      "pillar": "app",
+      "format": "behind_the_scenes",
+      "expression": "happy",
+      "image_text": "Der Sensor misst, ich muss nicht raten.",
+      "caption": "Der Sensor steckt in der Erde und misst Feuchtigkeit, Temperatur, Licht, Luftfeuchte und Nährstoffe. Die App gleicht die Werte mit deiner Pflanze ab und sagt dir, was sie braucht.",
+      "hashtags": [
+        "#pflanzensensor",
+        "#smartplants"
+      ],
+      "cta": "Mehr dazu in unserem Profil."
+    },
+    {
+      "id": "app-foto",
+      "pillar": "app",
+      "format": "behind_the_scenes",
+      "expression": "happy",
+      "image_text": "Foto machen, Pflanze erkennen.",
+      "caption": "In der App erkennst du deine Pflanze per Foto, weist ihr einen Raum zu und gibst ihr einen Namen. Danach lebt sie wie ein kleines Tamagotchi, mit Bedürfnissen und Laune.",
+      "hashtags": [
+        "#pflanzenapp"
+      ],
+      "cta": "Wie würdest du deine nennen?"
+    },
+    {
+      "id": "app-beduerfnisse",
+      "pillar": "app",
+      "format": "behind_the_scenes",
+      "expression": "thirsty",
+      "image_text": "Sie sagt, wenn sie etwas braucht.",
+      "caption": "In der App zeigt jede Pflanze, wie es ihr geht: Durst, zu wenig Licht, zu kalt. Und wenn alles passt, sagt sie auch Danke.",
+      "hashtags": [
+        "#pflanzentamagotchi"
+      ]
+    },
+    {
+      "id": "app-geschenk",
+      "pillar": "app",
+      "format": "geschenk",
+      "expression": "happy",
+      "image_text": "Pflanze plus Sensor. Perfektes Geschenk.",
+      "caption": "Das Bundle für alle, die jemandem eine Freude machen wollen, der Pflanzen liebt, aber nie weiß, wann gegossen werden muss.",
+      "hashtags": [
+        "#geschenkidee"
+      ],
+      "cta": "Mehr dazu in unserem Profil."
+    },
+    {
+      "id": "app-raeume",
+      "pillar": "app",
+      "format": "behind_the_scenes",
+      "expression": "happy",
+      "image_text": "Jede Pflanze bekommt ihren Raum.",
+      "caption": "Wohnzimmer, Küche, Büro: In der App behältst du den Überblick, wer wo steht und wie es ihr geht.",
+      "hashtags": [
+        "#pflanzenapp"
+      ]
+    },
+    {
+      "id": "wg-intro",
+      "pillar": "entertainment",
+      "format": "wg_meeting",
+      "scene": {
+        "cast": [
+          {
+            "char": "knospi",
+            "expression": "froh"
+          },
+          {
+            "char": "moni",
+            "expression": "lacht"
+          },
+          {
+            "char": "pepe",
+            "expression": "skeptisch"
+          },
+          {
+            "char": "siggi",
+            "expression": "schlaeft"
+          },
+          {
+            "char": "cleo",
+            "expression": "froh"
+          }
+        ],
+        "lines": [
+          {
+            "char": "knospi",
+            "text": "Hi, ich bin Knospi!"
+          },
+          {
+            "char": "moni",
+            "text": "Ich bin Moni. Ich bin ein Ereignis."
+          },
+          {
+            "char": "pepe",
+            "text": "Pepe. Ich bin nicht hier."
+          }
+        ]
+      },
+      "caption": "Jetzt sind alle da, willkommen in der Pflanzen-WG! Knospi (Forellenbegonie), Moni (Monstera), Pepe (Kaktus), Siggi (Bogenhanf) und Cleo (Calathea). Nur Knospi hat einen Sensor, die anderen sind neidisch.",
+      "hashtags": [
+        "#pflanzenwg"
+      ],
+      "cta": "Welche Pflanze in der WG ist deiner am ähnlichsten?",
+      "priority": 2
+    },
+    {
+      "id": "wg-moni-stirbt",
+      "pillar": "entertainment",
+      "format": "wg_comic",
+      "scene": {
+        "cast": [
+          {
+            "char": "moni",
+            "expression": "durstig"
+          },
+          {
+            "char": "pepe",
+            "expression": "genervt"
+          },
+          {
+            "char": "siggi",
+            "expression": "froh"
+          }
+        ],
+        "lines": [
+          {
+            "char": "moni",
+            "text": "Ich sterbe. Diesmal wirklich!"
+          },
+          {
+            "char": "pepe",
+            "text": "Das sagst du seit Montag."
+          },
+          {
+            "char": "siggi",
+            "text": "Hm."
+          }
+        ]
+      },
+      "caption": "Moni gibt die Vorstellung seit Montag. Pepe hat die Karten längst verschenkt.",
+      "hashtags": [
+        "#pflanzenwg"
+      ]
+    },
+    {
+      "id": "wg-fenster",
+      "pillar": "entertainment",
+      "format": "wg_meeting",
+      "scene": {
+        "cast": [
+          {
+            "char": "cleo",
+            "expression": "traurig"
+          },
+          {
+            "char": "pepe",
+            "expression": "skeptisch"
+          },
+          {
+            "char": "siggi",
+            "expression": "froh"
+          }
+        ],
+        "lines": [
+          {
+            "char": "cleo",
+            "text": "Das Fenster war offen. Ich bin gekränkt."
+          },
+          {
+            "char": "pepe",
+            "text": "Das nennt man Lüften."
+          },
+          {
+            "char": "siggi",
+            "text": "Gut so."
+          }
+        ]
+      },
+      "caption": "Calatheen nehmen Zugluft persönlich. Am besten lüftest du kurz und stellst sie nicht direkt ans Fenster.",
+      "hashtags": [
+        "#pflanzenwg",
+        "#calathea"
+      ]
+    },
+    {
+      "id": "wg-sensor-neid",
+      "pillar": "app",
+      "format": "wg_comic",
+      "scene": {
+        "cast": [
+          {
+            "char": "knospi",
+            "expression": "froh"
+          },
+          {
+            "char": "moni",
+            "expression": "ueberrascht"
+          },
+          {
+            "char": "pepe",
+            "expression": "skeptisch"
+          },
+          {
+            "char": "cleo",
+            "expression": "traurig"
+          }
+        ],
+        "lines": [
+          {
+            "char": "moni",
+            "text": "Knospi hat einen Sensor!"
+          },
+          {
+            "char": "cleo",
+            "text": "Ich will auch gemessen werden!"
+          },
+          {
+            "char": "pepe",
+            "text": "Ich will in Ruhe gelassen werden."
+          }
+        ]
+      },
+      "caption": "Nur Knospi wird gemessen. Pepe ist froh, Cleo ist beleidigt.",
+      "hashtags": [
+        "#pflanzenwg",
+        "#sensor"
+      ],
+      "cta": "Mehr zum Sensor findest du in unserem Profil."
+    },
+    {
+      "id": "wg-giesskanne",
+      "pillar": "entertainment",
+      "format": "wg_comic",
+      "scene": {
+        "cast": [
+          {
+            "char": "moni",
+            "expression": "ueberrascht"
+          },
+          {
+            "char": "pepe",
+            "expression": "skeptisch"
+          },
+          {
+            "char": "knospi",
+            "expression": "durstig"
+          }
+        ],
+        "lines": [
+          {
+            "char": "moni",
+            "text": "Er kommt mit der Gießkanne!"
+          },
+          {
+            "char": "pepe",
+            "text": "Ich spüre nichts."
+          },
+          {
+            "char": "knospi",
+            "text": "Mich zuerst!"
+          }
+        ]
+      },
+      "caption": "Gießrunde in der WG. Alle tun cool. Niemand ist cool.",
+      "hashtags": [
+        "#pflanzenwg",
+        "#giessrunde"
+      ]
+    },
+    {
+      "id": "wg-siggi-schweigt",
+      "pillar": "entertainment",
+      "format": "wg_comic",
+      "scene": {
+        "cast": [
+          {
+            "char": "moni",
+            "expression": "ueberrascht"
+          },
+          {
+            "char": "siggi",
+            "expression": "schlaeft"
+          }
+        ],
+        "lines": [
+          {
+            "char": "moni",
+            "text": "Siggi, sag doch mal was!"
+          },
+          {
+            "char": "siggi",
+            "text": "Nein."
+          }
+        ]
+      },
+      "caption": "Siggi spart Energie. Bogenhanf kommen mit wenig Wasser und wenig Licht aus, das ist kein Zufall.",
+      "hashtags": [
+        "#pflanzenwg",
+        "#bogenhanf"
+      ]
+    },
+    {
+      "id": "wg-wueste",
+      "pillar": "entertainment",
+      "format": "wg_comic",
+      "scene": {
+        "cast": [
+          {
+            "char": "cleo",
+            "expression": "traurig"
+          },
+          {
+            "char": "pepe",
+            "expression": "genervt"
+          }
+        ],
+        "lines": [
+          {
+            "char": "cleo",
+            "text": "Zu trocken. Ich ertrage das nicht!"
+          },
+          {
+            "char": "pepe",
+            "text": "Ich komme aus der Wüste. Und?"
+          }
+        ]
+      },
+      "caption": "Kakteen sind Profis im Nichtbrauchen. Calatheen sind Profis im Bemerken.",
+      "hashtags": [
+        "#pflanzenwg",
+        "#kaktus"
+      ]
+    },
+    {
+      "id": "wg-neues-blatt",
+      "pillar": "entertainment",
+      "format": "wg_comic",
+      "scene": {
+        "cast": [
+          {
+            "char": "moni",
+            "expression": "lacht"
+          },
+          {
+            "char": "pepe",
+            "expression": "ueberrascht"
+          },
+          {
+            "char": "siggi",
+            "expression": "froh"
+          }
+        ],
+        "lines": [
+          {
+            "char": "moni",
+            "text": "Ich habe ein neues Blatt!"
+          },
+          {
+            "char": "pepe",
+            "text": "Schon wieder?"
+          },
+          {
+            "char": "siggi",
+            "text": "Schön."
+          }
+        ]
+      },
+      "caption": "Moni hat ein neues Blatt. Alle freuen sich. Fast alle.",
+      "hashtags": [
+        "#pflanzenwg",
+        "#monstera"
+      ],
+      "cta": "Welche Pflanze in der WG ist deiner am ähnlichsten?"
+    },
+    {
+      "id": "wg-winter",
+      "pillar": "wissen",
+      "format": "wg_meeting",
+      "scene": {
+        "cast": [
+          {
+            "char": "pepe",
+            "expression": "skeptisch"
+          },
+          {
+            "char": "moni",
+            "expression": "traurig"
+          }
+        ],
+        "lines": [
+          {
+            "char": "moni",
+            "text": "Ich werde nicht mehr geliebt!"
+          },
+          {
+            "char": "pepe",
+            "text": "Du wirst im Winter weniger gegossen."
+          }
+        ]
+      },
+      "caption": "Im Winter brauchen die meisten Pflanzen deutlich weniger Wasser. Moni ist trotzdem beleidigt.",
+      "hashtags": [
+        "#pflanzenwg",
+        "#winterpflanzen"
+      ],
+      "seasons": [
+        "winter"
+      ]
+    },
+    {
+      "id": "wg-umgestellt",
+      "pillar": "entertainment",
+      "format": "wg_comic",
+      "scene": {
+        "cast": [
+          {
+            "char": "moni",
+            "expression": "ueberrascht"
+          },
+          {
+            "char": "cleo",
+            "expression": "traurig"
+          },
+          {
+            "char": "pepe",
+            "expression": "skeptisch"
+          }
+        ],
+        "lines": [
+          {
+            "char": "moni",
+            "text": "Jemand hat uns umgestellt!"
+          },
+          {
+            "char": "cleo",
+            "text": "Ich fühle mich entwurzelt."
+          },
+          {
+            "char": "pepe",
+            "text": "Ich merke nichts."
+          }
+        ]
+      },
+      "caption": "Nach dem Umstellen brauchen Pflanzen ein paar Tage, um sich an neues Licht und neue Luft zu gewöhnen.",
+      "hashtags": [
+        "#pflanzenwg"
+      ]
+    },
+    {
+      "id": "wg-sonnenbrand",
+      "pillar": "wissen",
+      "format": "wg_comic",
+      "scene": {
+        "cast": [
+          {
+            "char": "moni",
+            "expression": "ueberrascht"
+          },
+          {
+            "char": "pepe",
+            "expression": "skeptisch"
+          },
+          {
+            "char": "siggi",
+            "expression": "froh"
+          }
+        ],
+        "lines": [
+          {
+            "char": "moni",
+            "text": "Ich brenne! Ich BRENNE!"
+          },
+          {
+            "char": "pepe",
+            "text": "Du stehst in der Mittagssonne."
+          },
+          {
+            "char": "siggi",
+            "text": "Vorhang. Hab ich gesagt."
+          }
+        ]
+      },
+      "caption": "Direkte Mittagssonne hinter Glas kann Blätter verbrennen. Ein dünner Vorhang rettet jeden Auftritt.",
+      "hashtags": [
+        "#pflanzenwg",
+        "#licht"
+      ]
+    },
+    {
+      "id": "wg-knospi-bescheid",
+      "pillar": "app",
+      "format": "behind_the_scenes",
+      "scene": {
+        "cast": [
+          {
+            "char": "knospi",
+            "expression": "zwinkert"
+          },
+          {
+            "char": "pepe",
+            "expression": "skeptisch"
+          },
+          {
+            "char": "siggi",
+            "expression": "froh"
+          }
+        ],
+        "lines": [
+          {
+            "char": "knospi",
+            "text": "Ich sage Bescheid, wenn ich was brauche."
+          },
+          {
+            "char": "pepe",
+            "text": "Angeberin."
+          }
+        ]
+      },
+      "caption": "So funktioniert der Sensor: Knospi meldet sich, wenn sie etwas braucht.",
+      "hashtags": [
+        "#pflanzenwg",
+        "#pflanzensensor"
+      ],
+      "cta": "Mehr zur App findest du in unserem Profil."
+    },
+    {
+      "id": "wg-mitbewohner",
+      "pillar": "community",
+      "format": "wg_meeting",
+      "scene": {
+        "cast": [
+          {
+            "char": "moni",
+            "expression": "lacht"
+          },
+          {
+            "char": "pepe",
+            "expression": "genervt"
+          },
+          {
+            "char": "siggi",
+            "expression": "schlaeft"
+          },
+          {
+            "char": "cleo",
+            "expression": "froh"
+          }
+        ],
+        "lines": [
+          {
+            "char": "moni",
+            "text": "Wir brauchen neue Mitbewohner!"
+          },
+          {
+            "char": "pepe",
+            "text": "Bitte nicht."
+          },
+          {
+            "char": "cleo",
+            "text": "Doch!"
+          }
+        ]
+      },
+      "caption": "Die WG sucht Zuwachs. Welche Pflanze soll als Nächstes einziehen?",
+      "hashtags": [
+        "#pflanzenwg"
+      ],
+      "cta": "Schreib sie in die Kommentare."
+    },
+    {
+      "id": "wg-moni-welkt",
+      "pillar": "entertainment",
+      "format": "wg_comic",
+      "scene": {
+        "cast": [
+          {
+            "char": "siggi",
+            "expression": "schlaeft"
+          },
+          {
+            "char": "moni",
+            "expression": "durstig"
+          },
+          {
+            "char": "pepe",
+            "expression": "lacht"
+          }
+        ],
+        "lines": [
+          {
+            "char": "moni",
+            "text": "Ich glaube, ich welke!"
+          },
+          {
+            "char": "pepe",
+            "text": "Du hast ein Blatt verloren."
+          },
+          {
+            "char": "siggi",
+            "text": "Zzz."
+          }
+        ]
+      },
+      "caption": "Moni übertreibt. Das ist ihr Hobby.",
+      "hashtags": [
+        "#pflanzenwg"
+      ]
+    },
+    {
+      "id": "wg-giessrunde",
+      "pillar": "community",
+      "format": "giessrunde",
+      "scene": {
+        "cast": [
+          {
+            "char": "moni",
+            "expression": "lacht"
+          },
+          {
+            "char": "pepe",
+            "expression": "genervt"
+          },
+          {
+            "char": "siggi",
+            "expression": "froh"
+          },
+          {
+            "char": "cleo",
+            "expression": "froh"
+          }
+        ],
+        "lines": [
+          {
+            "char": "moni",
+            "text": "Gießrunde! Ich zuerst!"
+          },
+          {
+            "char": "pepe",
+            "text": "Ich brauche nichts."
+          }
+        ]
+      },
+      "caption": "Gießrunde in der WG. Kakteen wie Pepe brauchen am wenigsten.",
+      "hashtags": [
+        "#pflanzenwg",
+        "#giessrunde"
+      ]
+    },
+    {
+      "id": "knospi-vorstellung",
+      "pillar": "entertainment",
+      "format": "pflanzenmoment",
+      "expression": "happy",
+      "image_text": "Hallo. Ich bin Knospi. Ich wohne hier.",
+      "caption": "Forellenbegonie, neugierig, ein bisschen dramatisch. Ich sehe dir beim Gießen zu und gebe heimlich Noten. Bald ziehen noch ein paar Verrückte bei mir ein.",
+      "hashtags": [
+        "#knospi",
+        "#pflanzenwg"
+      ],
+      "cta": "Sag Hallo in den Kommentaren.",
+      "priority": 7
+    },
+    {
+      "id": "wg-einzug-moni",
+      "pillar": "entertainment",
+      "format": "wg_comic",
+      "scene": {
+        "cast": [
+          {
+            "char": "knospi",
+            "expression": "froh"
+          },
+          {
+            "char": "moni",
+            "expression": "lacht"
+          }
+        ],
+        "lines": [
+          {
+            "char": "moni",
+            "text": "Ich bin Moni. Platz da!"
+          },
+          {
+            "char": "knospi",
+            "text": "Das Fensterbrett ist klein."
+          }
+        ]
+      },
+      "caption": "Tag 1 in der WG: Moni zieht ein. Eine Monstera braucht Platz und Aufmerksamkeit, und sie holt sich beides.",
+      "hashtags": [
+        "#pflanzenwg",
+        "#monstera"
+      ],
+      "priority": 6
+    },
+    {
+      "id": "wg-einzug-pepe",
+      "pillar": "entertainment",
+      "format": "wg_comic",
+      "scene": {
+        "cast": [
+          {
+            "char": "pepe",
+            "expression": "skeptisch"
+          },
+          {
+            "char": "knospi",
+            "expression": "ueberrascht"
+          },
+          {
+            "char": "moni",
+            "expression": "genervt"
+          }
+        ],
+        "lines": [
+          {
+            "char": "pepe",
+            "text": "Ich bleibe nicht lange."
+          },
+          {
+            "char": "knospi",
+            "text": "Pepe, das ist mein Platz!"
+          },
+          {
+            "char": "moni",
+            "text": "Er sticht."
+          }
+        ]
+      },
+      "caption": "Tag 2: Pepe, der Kaktus, zieht ein. Er sagt, er bleibt nicht lange. Das sagen alle Kakteen und bleiben ewig.",
+      "hashtags": [
+        "#pflanzenwg",
+        "#kaktus"
+      ],
+      "priority": 5
+    },
+    {
+      "id": "wg-einzug-siggi",
+      "pillar": "entertainment",
+      "format": "wg_comic",
+      "scene": {
+        "cast": [
+          {
+            "char": "knospi",
+            "expression": "skeptisch"
+          },
+          {
+            "char": "siggi",
+            "expression": "schlaeft"
+          }
+        ],
+        "lines": [
+          {
+            "char": "knospi",
+            "text": "Hallo? Siggi? Bist du da?"
+          },
+          {
+            "char": "siggi",
+            "text": "Bin da."
+          }
+        ]
+      },
+      "caption": "Tag 3: Siggi, der Bogenhanf, kommt an. Er sagt kaum etwas und stört niemanden. Der perfekte Mitbewohner.",
+      "hashtags": [
+        "#pflanzenwg",
+        "#bogenhanf"
+      ],
+      "priority": 4
+    },
+    {
+      "id": "wg-einzug-cleo",
+      "pillar": "entertainment",
+      "format": "wg_comic",
+      "scene": {
+        "cast": [
+          {
+            "char": "cleo",
+            "expression": "traurig"
+          },
+          {
+            "char": "knospi",
+            "expression": "froh"
+          },
+          {
+            "char": "moni",
+            "expression": "ueberrascht"
+          }
+        ],
+        "lines": [
+          {
+            "char": "cleo",
+            "text": "Ist hier Zugluft?"
+          },
+          {
+            "char": "moni",
+            "text": "Schon da, schon beleidigt."
+          },
+          {
+            "char": "knospi",
+            "text": "Willkommen, Cleo!"
+          }
+        ]
+      },
+      "caption": "Tag 4: Cleo, die Calathea, zieht ein. Sie prüft zuerst Licht, Luft und Stimmung. Die Stimmung fällt durch.",
+      "hashtags": [
+        "#pflanzenwg",
+        "#calathea"
+      ],
+      "priority": 3
+    }
+  ]
+}
