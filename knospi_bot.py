@@ -23,6 +23,7 @@ markiert):
 import json
 import os
 import random
+import re
 import subprocess
 import sys
 import time
@@ -76,7 +77,97 @@ TEMP_MARGIN = 1.0   # Grad Celsius
 # schlecht geht, sagt der tägliche Hallo-Post (einmal pro Tag).
 TIP_COOLDOWN_HOURS = 6
 
+# ---------------------------------------------------------------------------
+# Redaktionelle Regeln (aus dem Instagram-Briefing)
+# ---------------------------------------------------------------------------
+
+# Kein automatischer Post zwischen 22:00 und 07:00 Uhr (Berlin-Zeit).
+QUIET_START = dtime(22, 0)
+QUIET_END = dtime(7, 0)
+
+# Automatische Sensor-Posts (Kippt / Danke / Hallo bei Problem): höchstens 1 pro Tag.
+# Freigegebene Pool-Posts (siehe unten) zählen dabei nicht mit, sie sind ja von Hand freigegeben.
+MAX_AUTOMATED_POSTS_PER_DAY = 1
+
+# "Es wird schlecht"-Posts: höchstens 2 pro Woche, und pro Zustand ein Mindestabstand in Tagen
+# (trockene Erde 1x pro Woche, zu nass 1x pro Monat). "Danke"-Posts sind davon ausgenommen.
+MAX_TIPS_PER_WEEK = 2
+TIP_MIN_DAYS_BETWEEN = {
+    "soil_low": 7, "soil_high": 30,
+    "temp_low": 7, "temp_high": 7,
+    "hum_low": 7, "hum_high": 30,
+}
+# Außergewöhnlicher Anlass: Dann gelten die Wochen-/Monatslimits nicht (Tageslimit und Ruhezeit schon).
+EXTRAORDINARY = {
+    "soil_low": lambda v: v < 25,
+    "soil_high": lambda v: v > 90,
+    "temp_low": lambda v: v < 12,
+    "temp_high": lambda v: v > 30,
+    "hum_high": lambda v: v > 95,
+}
+
+# Ein einzelner Ausreißer löst nichts aus: Die letzten N Messungen müssen denselben Zustand zeigen.
+STABLE_READINGS = 3
+# Messwerte, die älter sind, gelten als veraltet -> keine Sensor-Posts.
+MAX_READING_AGE_HOURS = 6
+
+# Wie lange das Protokoll der Posts in state.json aufgehoben wird.
+POST_LOG_KEEP_DAYS = 45
+
+# --- Inhalts-Pool (vorbereitete Posts, ohne Sensor) -------------------------
+# Entwürfe entstehen an diesen Wochentagen (0 = Montag ... 6 = Sonntag) zwischen 10 und 18 Uhr,
+# höchstens POOL_MAX_PER_WEEK pro Woche. Sie gehen erst raus, wenn du sie freigibst.
+POOL_WEEKDAYS = {0, 2, 3, 6}
+POOL_MAX_PER_WEEK = 4
+POOL_DRAFT_START = dtime(10, 0)
+POOL_DRAFT_END = dtime(18, 0)
+POOL_REPEAT_DAYS = 120      # derselbe Inhalt frühestens nach so vielen Tagen wieder
+DRAFT_REVIEW_DAYS = 3       # Entwürfe, auf die du nicht antwortest, verfallen nach so vielen Tagen
+DRAFT_EXPIRY_DAYS = 7       # freigegebene, aber (z.B. wegen Tageslimit) nicht gepostete Entwürfe verfallen danach
+# Wunschverteilung der Inhalte (Startverteilung aus dem Briefing)
+PILLAR_TARGETS = {"entertainment": 0.35, "wissen": 0.25, "community": 0.20, "app": 0.20}
+PILLAR_LABEL = {
+    "entertainment": "Entertainment", "wissen": "Pflanzenwissen",
+    "community": "Community", "app": "App & Sensor",
+}
+# Ungefähr jeder dritte Pool-Post bekommt einen sanften Aufruf (CTA), falls der Inhalt einen hat.
+CTA_EVERY = 3
+
+FORMAT_LABEL = {
+    "knospi_klaert_das": "Knospi klärt das",
+    "pflanzenbeichte": "Pflanzenbeichte",
+    "mythos": "Mythos der Woche",
+    "knospi_news": "Knospi News",
+    "pflanzenmoment": "Pflanzenmoment",
+    "frag_knospi": "Frag Knospi",
+    "wg_meeting": "WG-Meeting",
+    "wg_comic": "Pflanzen-WG",
+    "behind_the_scenes": "Behind the Scenes",
+    "geschenk": "Verschenk-Idee",
+    "community": "Community",
+    "giessrunde": "Gießrunde",
+}
+CHARACTERS = {"knospi", "moni", "pepe", "siggi", "cleo"}
+EXPRESSIONS = {
+    "froh", "lacht", "zwinkert", "verliebt", "ueberrascht",
+    "skeptisch", "genervt", "durstig", "traurig", "schlaeft",
+}
+SEASONS = {"spring", "summer", "autumn", "winter"}
+
 STATE_PATH = Path(__file__).parent / "state.json"
+POOL_PATH = Path(__file__).parent / "content_pool.json"
+DRAFTS_DIR = Path(__file__).parent / "drafts"
+CHAR_DIR = Path(__file__).parent / "assets" / "characters"
+# Figuren werden an mehreren möglichen Orten gesucht (erster Treffer gewinnt).
+# Dateiname: <figur>-<ausdruck>.png (oder <ausdruck>.png), z.B. moni-durstig.png
+_ROOT = Path(__file__).parent
+CHAR_SEARCH_DIRS = [
+    "assets/characters/{c}",
+    "marketing/figuren/png/{c}",
+    "marketing/figuren/figuren/png/{c}",
+    "marketing/figuren/{c}",
+    "figuren/png/{c}",
+]
 OUTPUT_DIR = Path(__file__).parent / "output"
 FONT_DIR = Path(__file__).parent / "assets" / "fonts"
 MOODS_DIR = Path(__file__).parent / "assets" / "moods"
@@ -116,7 +207,20 @@ def band(value, lo, hi):
     return "ok"
 
 
-def fetch_latest_reading():
+def _row_to_reading(row):
+    last = row["json"]
+    return {
+        "ts": row["ts"],
+        "soil": last["soil"]["percent"],
+        "soil_raw": last["soil"].get("raw"),
+        "temp": last.get("climate", {}).get("temperature_c"),
+        "hum": last.get("climate", {}).get("humidity_pct"),
+        "light_visible": last.get("light", {}).get("visible"),
+    }
+
+
+def fetch_readings(n=1):
+    """Die letzten n gültigen Messungen, älteste zuerst (die neueste steht am Ende)."""
     resp = requests.get(SENSOR_URL, timeout=20)
     resp.raise_for_status()
     data = resp.json()
@@ -127,15 +231,35 @@ def fetch_latest_reading():
     ]
     if not rows:
         raise RuntimeError("Keine gültigen Messwerte im Sensor-Feed gefunden")
-    last = rows[-1]["json"]
-    return {
-        "ts": rows[-1]["ts"],
-        "soil": last["soil"]["percent"],
-        "soil_raw": last["soil"].get("raw"),
-        "temp": last.get("climate", {}).get("temperature_c"),
-        "hum": last.get("climate", {}).get("humidity_pct"),
-        "light_visible": last.get("light", {}).get("visible"),
-    }
+    return [_row_to_reading(r) for r in rows[-n:]]
+
+
+def fetch_latest_reading():
+    return fetch_readings(1)[-1]
+
+
+def reading_age_hours(reading, now=None):
+    """Alter der Messung in Stunden. None, wenn der Zeitstempel nicht lesbar ist
+    (dann wird die Aktualitätsprüfung übersprungen statt fälschlich zu blockieren)."""
+    ts = reading.get("ts")
+    now = now or datetime.now(LOCAL_TZ)
+    try:
+        if isinstance(ts, (int, float)):
+            seconds = ts / 1000 if ts > 1e11 else ts
+            when = datetime.fromtimestamp(seconds, LOCAL_TZ)
+        elif isinstance(ts, str):
+            if ts.replace(".", "", 1).isdigit():
+                v = float(ts)
+                when = datetime.fromtimestamp(v / 1000 if v > 1e11 else v, LOCAL_TZ)
+            else:
+                when = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                if when.tzinfo is None:
+                    when = when.replace(tzinfo=ZoneInfo("UTC"))
+        else:
+            return None
+    except (ValueError, OverflowError, OSError):
+        return None
+    return (now - when).total_seconds() / 3600
 
 
 def band_with_hysteresis(value, lo, hi, prev, margin):
@@ -385,8 +509,14 @@ MOOD_LABEL = {
 # ---------------------------------------------------------------------------
 
 def _default_state():
-    # last_event merkt sich pro Wert, wann zuletzt ein Post dazu raus ging.
-    return {"soil": "ok", "temp": "ok", "hum": "ok", "last_daily": None, "last_event": {}}
+    # last_event: wann zuletzt ein Post zu diesem Wert raus ging.
+    # post_log:   Protokoll aller Posts (für Tages-/Wochenlimits und Ruhezeiten).
+    # pool:       Verlauf der Pool-Posts (Wiederholungen, Säulen-Verteilung, CTA-Takt).
+    return {
+        "soil": "ok", "temp": "ok", "hum": "ok",
+        "last_daily": None, "last_event": {},
+        "post_log": [], "pool": {"history": [], "since_cta": 0},
+    }
 
 
 def load_state():
@@ -400,9 +530,22 @@ def load_state():
             print(f"WARNUNG: state.json ist kein gültiges JSON ({e}). Nutze Standardwerte.")
             return state
         if isinstance(loaded, dict):
-            state.update(loaded)  # ältere state.json ohne last_event funktionieren weiter
+            state.update(loaded)  # ältere state.json ohne neue Felder funktionieren weiter
         if not isinstance(state.get("last_event"), dict):
             state["last_event"] = {}
+        if not isinstance(state.get("pool"), dict):
+            state["pool"] = {"history": [], "since_cta": 0}
+        state["pool"].setdefault("history", [])
+        state["pool"].setdefault("since_cta", 0)
+        if not isinstance(state.get("post_log"), list):
+            state["post_log"] = []
+        # Altes state.json ohne Protokoll: aus last_daily/last_event ein Start-Protokoll bauen,
+        # damit das Tageslimit schon am ersten Tag nach dem Umstieg stimmt.
+        if not state["post_log"]:
+            if state.get("last_daily"):
+                state["post_log"].append({"ts": state["last_daily"], "kind": "daily", "key": None})
+            for key, ts in state["last_event"].items():
+                state["post_log"].append({"ts": ts, "kind": "legacy", "key": key})
     return state
 
 
@@ -447,10 +590,10 @@ def decide_events(prev_state, new_states, now=None):
     return events, suppressed
 
 
-def is_daily_due(last_daily_iso):
+def is_daily_due(last_daily_iso, now=None):
     """True, wenn heute noch kein Hallo-Post raus ist UND die aktuelle lokale
     Uhrzeit innerhalb von DAILY_WINDOW_START/-END liegt."""
-    now_local = datetime.now(LOCAL_TZ)
+    now_local = now or datetime.now(LOCAL_TZ)
 
     if not (DAILY_WINDOW_START <= now_local.time() <= DAILY_WINDOW_END):
         return False
@@ -464,6 +607,125 @@ def is_daily_due(last_daily_iso):
         # "noch nicht heute gepostet" behandeln, statt den Lauf abzubrechen.
         return True
     return last.astimezone(LOCAL_TZ).date() < now_local.date()
+
+
+# ---------------------------------------------------------------------------
+# Regelwerk: wann darf gepostet werden? (Ruhezeit, Tages-/Wochenlimits, Stabilität)
+# ---------------------------------------------------------------------------
+
+def in_quiet_hours(now):
+    t = now.time()
+    return t >= QUIET_START or t < QUIET_END
+
+
+def _parse_iso(value):
+    try:
+        dt = datetime.fromisoformat(value)
+    except (ValueError, TypeError):
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=LOCAL_TZ)
+    return dt
+
+
+def _log_entries(state, kinds=None, key=None, st=None, since=None):
+    out = []
+    for entry in state.get("post_log") or []:
+        ts = _parse_iso(entry.get("ts"))
+        if ts is None:
+            continue
+        if since is not None and ts < since:
+            continue
+        if kinds and entry.get("kind") not in kinds:
+            continue
+        if key is not None and entry.get("key") != key:
+            continue
+        if st is not None and entry.get("state") != st:
+            continue
+        out.append(entry)
+    return out
+
+
+def _is_today(entry, now):
+    ts = _parse_iso(entry.get("ts"))
+    return ts is not None and ts.astimezone(LOCAL_TZ).date() == now.date()
+
+
+def automated_posts_today(state, now):
+    """Wie viele automatische Sensor-Posts (alles außer Pool-Posts) heute schon raus sind."""
+    return [e for e in state.get("post_log") or [] if e.get("kind") != "pool" and _is_today(e, now)]
+
+
+def pool_posts_today(state, now):
+    return [e for e in state.get("post_log") or [] if e.get("kind") == "pool" and _is_today(e, now)]
+
+
+def automated_post_allowed(state, now):
+    """(erlaubt?, Grund) für einen automatischen Sensor-Post."""
+    if in_quiet_hours(now):
+        return False, f"Ruhezeit ({QUIET_START:%H:%M}-{QUIET_END:%H:%M} Uhr)"
+    if len(automated_posts_today(state, now)) >= MAX_AUTOMATED_POSTS_PER_DAY:
+        return False, "heute ist schon ein automatischer Post raus"
+    return True, ""
+
+
+def tip_allowed(state, key, new, reading, now):
+    """(erlaubt?, Grund) für einen 'wird schlecht'-Post: Wochenlimit und Mindestabstand pro Zustand.
+    Bei außergewöhnlichen Werten entfallen die Wochen-/Monatslimits."""
+    name = f"{key}_{new}"
+    check = EXTRAORDINARY.get(name)
+    value = reading.get(key)
+    if check and value is not None and check(value):
+        return True, ""
+    week = _log_entries(state, kinds={"tip"}, since=now - timedelta(days=7))
+    if len(week) >= MAX_TIPS_PER_WEEK:
+        return False, f"Wochenlimit ({MAX_TIPS_PER_WEEK} 'wird schlecht'-Posts) erreicht"
+    days = TIP_MIN_DAYS_BETWEEN.get(name, 7)
+    recent = _log_entries(state, kinds={"tip"}, key=key, st=new, since=now - timedelta(days=days))
+    if recent:
+        return False, f"zu '{name}' kam in den letzten {days} Tagen schon ein Post"
+    return True, ""
+
+
+def confirmed_states(readings, prev_state):
+    """Zustand je Wert, der in ALLEN übergebenen Messungen gleich ist (sonst None).
+    So löst ein einzelner Ausreißer keinen Post aus."""
+    per_reading = [evaluate(r, prev_state) for r in readings]
+    out = {}
+    for key in ("soil", "temp", "hum"):
+        values = {p[key] for p in per_reading}
+        out[key] = values.pop() if len(values) == 1 else None
+    return out
+
+
+def primary_problem(states):
+    """Das wichtigste aktuelle Problem als (wert, zustand) oder None, wenn alles in Ordnung ist."""
+    if states["soil"] == "low":
+        return "soil", "low"
+    if HUM_LOW_IS_PROBLEM and states["hum"] == "low":
+        return "hum", "low"
+    if states["temp"] in ("low", "high"):
+        return "temp", states["temp"]
+    if states["soil"] == "high":
+        return "soil", "high"
+    if states["hum"] == "high":
+        return "hum", "high"
+    return None
+
+
+def record_post(state, now, kind, key=None, st=None, extra=None):
+    """Neuer Zustand mit einem zusätzlichen Eintrag im Post-Protokoll (altes wird aufgeräumt)."""
+    new_state = dict(state)
+    cutoff = now - timedelta(days=POST_LOG_KEEP_DAYS)
+    log = [e for e in (state.get("post_log") or []) if (_parse_iso(e.get("ts")) or now) >= cutoff]
+    entry = {"ts": now.isoformat(), "kind": kind, "key": key}
+    if st is not None:
+        entry["state"] = st
+    if extra:
+        entry.update(extra)
+    log.append(entry)
+    new_state["post_log"] = log
+    return new_state
 
 
 # ---------------------------------------------------------------------------
@@ -548,6 +810,151 @@ def render_story(reading, states, body_text):
 
 
 # ---------------------------------------------------------------------------
+# Bilder für Pool-Posts: Knospi-Kachel mit eigenem Bildtext und Format-Label,
+# bzw. Pflanzen-WG-Szene aus den festen Figuren-Assets (assets/characters/...)
+# ---------------------------------------------------------------------------
+
+CREAM = (255, 253, 247)
+LIME = (223, 244, 143)
+PILL_DOT = (160, 222, 100)
+GRAY_TEXT = (96, 108, 88)
+
+
+def _pill_geometry(draw, label, right=1016, top=1203, bottom=1290):
+    """Schrift und Position der dunklen Label-Pille unten rechts (wie in den Vorlagen)."""
+    size = 44
+    font = load_font(size)
+    while draw.textbbox((0, 0), label, font=font)[2] > 430 and size > 28:
+        size -= 2
+        font = load_font(size)
+    tb = draw.textbbox((0, 0), label, font=font)
+    pad, dot, gap = 38, 24, 14
+    width = pad + dot + gap + (tb[2] - tb[0]) + pad
+    return {"font": font, "tb": tb, "pad": pad, "dot": dot, "gap": gap,
+            "left": right - width, "right": right, "top": top, "bottom": bottom}
+
+
+def _draw_pill(draw, label, right=1016, top=1203, bottom=1290):
+    g = _pill_geometry(draw, label, right, top, bottom)
+    left, tb = g["left"], g["tb"]
+    draw.rounded_rectangle((left, top, right, bottom), radius=(bottom - top) // 2, fill=INK)
+    cy = (top + bottom) // 2
+    draw.ellipse((left + g["pad"], cy - g["dot"] // 2, left + g["pad"] + g["dot"], cy + g["dot"] // 2), fill=PILL_DOT)
+    tx = left + g["pad"] + g["dot"] + g["gap"] - tb[0]
+    ty = cy - (tb[1] + tb[3]) / 2
+    draw.text((tx, ty), label, font=g["font"], fill=CREAM)
+    return left
+
+
+def _draw_centered_lines(draw, lines, font, line_h, box):
+    x0, y0, x1, y1 = box
+    y = y0 + ((y1 - y0) - line_h * len(lines)) // 2
+    cx = (x0 + x1) // 2
+    for line in lines:
+        bbox = draw.textbbox((0, 0), line, font=font)
+        draw.text((cx - (bbox[2] - bbox[0]) // 2, y), line, font=font, fill=INK)
+        y += line_h
+
+
+def render_pool_post(entry, out_path):
+    """Knospi-Kachel (Ausdruck laut Eintrag) mit dem Bildtext in der Sprechblase.
+    Die baked-in Stimmungs-Pille ('Rundum wohl' o.ä.) wird durch das Format ersetzt
+    ('Knospi klärt das' ...), damit der Post keine Sensor-Aussage vortäuscht."""
+    img = Image.open(MOOD_TEMPLATE[entry["expression"]]).convert("RGB")
+    draw = ImageDraw.Draw(img)
+    font, lines, line_h = _fit_text(draw, entry["image_text"], BUBBLE_BOX)
+    _draw_centered_lines(draw, lines, font, line_h, BUBBLE_BOX)
+    draw.rectangle((620, 1165, img.width, img.height), fill=CREAM)
+    _draw_pill(draw, FORMAT_LABEL[entry["format"]])
+    img.save(out_path, "PNG")
+    return out_path
+
+
+def _draw_bubble(draw, box, tail_x):
+    x0, y0, x1, y1 = box
+    draw.rounded_rectangle((x0, y0 + 10, x1, y1 + 10), radius=40, fill=(205, 222, 150))
+    draw.rounded_rectangle(box, radius=40, fill=CREAM, outline=INK, width=6)
+    tx = max(x0 + 70, min(x1 - 70, tail_x))
+    draw.polygon([(tx - 24, y1 - 3), (tx + 24, y1 - 3), (tx, y1 + 34)], fill=CREAM)
+    draw.line([(tx - 24, y1), (tx, y1 + 34), (tx + 24, y1)], fill=INK, width=6, joint="curve")
+    draw.line([(tx - 21, y1), (tx + 21, y1)], fill=CREAM, width=8)
+
+
+def render_scene(entry, out_path):
+    """Pflanzen-WG-Szene: feste Figuren-Assets unten, Sprechblasen oben (1080x1350)."""
+    scene = entry["scene"]
+    W, H = 1080, 1350
+    glow = Image.new("RGB", (W, H), LIME)
+    gd = ImageDraw.Draw(glow)
+    gd.ellipse((-250, -300, 800, 420), fill=(238, 250, 190))
+    gd.ellipse((620, 480, 1350, 980), fill=(236, 249, 186))
+    img = glow.filter(ImageFilter.GaussianBlur(120))
+    draw = ImageDraw.Draw(img)
+
+    # Figuren in einer Reihe, auf einer gemeinsamen Standlinie
+    cast = scene["cast"]
+    n = len(cast)
+    slot_w = (W - 80) / n
+    ground_y = 1115
+    sprites = []
+    for member in cast:
+        sprite = Image.open(char_path(member["char"], member["expression"])).convert("RGBA")
+        box = sprite.getchannel("A").getbbox()  # transparenten Rand abschneiden
+        sprites.append(sprite.crop(box) if box else sprite)
+    # Ein gemeinsamer Maßstab für alle Figuren, damit die Größenverhältnisse stimmen
+    # (Pepes flacher Topf bleibt kleiner als Monis Topf)
+    scale = min(min((slot_w - 24) / sp.width, 560 / sp.height) for sp in sprites)
+    centers = {}
+    for i, (member, char) in enumerate(zip(cast, sprites)):
+        char = char.resize((max(1, int(char.width * scale)), max(1, int(char.height * scale))), Image.LANCZOS)
+        cx = int(40 + slot_w * (i + 0.5))
+        img.paste(char, (cx - char.width // 2, ground_y - char.height), char)
+        half = int(min(char.width / 2 + 24, slot_w / 2 - 6))
+        draw.line([(cx - half, ground_y + 10), (cx + half, ground_y + 10)], fill=INK, width=8)
+        centers[member["char"]] = cx
+
+    # Sprechblasen von oben nach unten in Sprechreihenfolge
+    bubble_w = 760
+    y = 70
+    for line in scene["lines"]:
+        font, lines, line_h = _fit_text(draw, line["text"], (0, 0, bubble_w - 90, 150), start_size=46, min_size=28)
+        h = line_h * len(lines) + 56
+        cx = centers[line["char"]]
+        x0 = max(40, min(W - 40 - bubble_w, cx - bubble_w // 2))
+        box = (x0, y, x0 + bubble_w, y + h)
+        _draw_bubble(draw, box, cx)
+        _draw_centered_lines(draw, lines, font, line_h, box)
+        y += h + 46
+
+    # Fußleiste wie in den Kacheln: Titel links, Format-Label rechts
+    draw.rectangle((0, 1150, W, H), fill=CREAM)
+    draw.rectangle((0, 1150, W, 1156), fill=INK)
+    pill_left = _pill_geometry(draw, FORMAT_LABEL[entry["format"]])["left"]
+    size = 62
+    title = "Die Pflanzen-WG"
+    font = load_font(size)
+    while draw.textbbox((0, 0), title, font=font)[2] > pill_left - 66 - 30 and size > 30:
+        size -= 2
+        font = load_font(size)
+    draw.text((66, 1190), title, font=font, fill=INK)
+    names = " · ".join(m["char"].capitalize() for m in cast)
+    sub_font = load_font(32, bold=False)
+    while draw.textbbox((0, 0), names, font=sub_font)[2] > pill_left - 66 - 30 and sub_font.size > 20:
+        sub_font = load_font(sub_font.size - 2, bold=False)
+    draw.text((66, 1262), names, font=sub_font, fill=GRAY_TEXT)
+    _draw_pill(draw, FORMAT_LABEL[entry["format"]])
+    img.save(out_path, "PNG")
+    return out_path
+
+
+def render_pool_image(entry, out_path):
+    out_path.parent.mkdir(exist_ok=True)
+    if entry.get("scene"):
+        return render_scene(entry, out_path)
+    return render_pool_post(entry, out_path)
+
+
+# ---------------------------------------------------------------------------
 # GitHub: Bild committen, damit es unter einer öffentlichen raw.githubusercontent-URL
 # erreichbar ist (die Instagram Graph API braucht eine öffentliche Bild-URL, keinen Upload)
 # ---------------------------------------------------------------------------
@@ -568,7 +975,12 @@ def commit_paths(paths, message):
     if diff.returncode == 0:
         return
     subprocess.run(["git", "commit", "-m", message], check=True)
-    subprocess.run(["git", "push"], check=True)
+    push = subprocess.run(["git", "push"])
+    if push.returncode != 0:
+        # Zwischenzeitlich wurde im Repo etwas geändert (z.B. von dir im Browser):
+        # erst die neuen Änderungen holen, dann nochmal pushen.
+        subprocess.run(["git", "pull", "--rebase"], check=True)
+        subprocess.run(["git", "push"], check=True)
 
 
 def commit_and_get_public_url(image_path: Path):
@@ -681,103 +1093,658 @@ def _wait_for_container_ready(ig_user_id, creation_id, access_token, max_attempt
 
 
 # ---------------------------------------------------------------------------
+# Inhalts-Pool: vorbereitete Posts (content_pool.json), Auswahl, Entwürfe, Freigabe
+# ---------------------------------------------------------------------------
+
+EMOJI_RE = re.compile("[\U0001F300-\U0001FAFF☀-➿⭐⭕]")
+
+
+def char_path(char, expression):
+    """Pfad zur Figuren-Datei oder (wenn keine existiert) der Standardpfad."""
+    for pattern in CHAR_SEARCH_DIRS:
+        folder = _ROOT / pattern.format(c=char)
+        for name in (f"{char}-{expression}.png", f"{expression}.png"):
+            if (folder / name).exists():
+                return folder / name
+    return CHAR_DIR / char / f"{char}-{expression}.png"
+
+
+def season_of(now):
+    return {12: "winter", 1: "winter", 2: "winter", 3: "spring", 4: "spring", 5: "spring",
+            6: "summer", 7: "summer", 8: "summer"}.get(now.month, "autumn")
+
+
+def _words(text):
+    return len(str(text).split())
+
+
+def _validate_scene(scene):
+    if not isinstance(scene, dict):
+        return ["scene ist kein Objekt"]
+    errors = []
+    cast = scene.get("cast")
+    chars = []
+    if not isinstance(cast, list) or not 2 <= len(cast) <= 5:
+        errors.append("scene.cast: 2 bis 5 Figuren")
+    else:
+        for member in cast:
+            if not isinstance(member, dict) or member.get("char") not in CHARACTERS \
+                    or member.get("expression") not in EXPRESSIONS:
+                errors.append(f"scene.cast: ungültige Figur {member!r}")
+            else:
+                chars.append(member["char"])
+        if len(set(chars)) != len(chars):
+            errors.append("scene.cast: Figur kommt doppelt vor")
+    lines = scene.get("lines")
+    if not isinstance(lines, list) or not 1 <= len(lines) <= 3:
+        errors.append("scene.lines: 1 bis 3 Sprechblasen")
+    else:
+        speakers = []
+        for line in lines:
+            if not isinstance(line, dict) or line.get("char") not in chars \
+                    or not isinstance(line.get("text"), str) or not line["text"].strip():
+                errors.append(f"scene.lines: ungültige Zeile {line!r}")
+                continue
+            speakers.append(line["char"])
+            if _words(line["text"]) > 7:
+                errors.append(f"scene.lines: mehr als 7 Wörter: {line['text']!r}")
+        if len(set(speakers)) != len(speakers):
+            errors.append("scene.lines: jede Figur hat höchstens eine Sprechblase")
+    return errors
+
+
+def validate_entry(entry):
+    """Prüft einen Pool-Eintrag gegen die Regeln des Briefings. Leere Liste = in Ordnung."""
+    if not isinstance(entry, dict):
+        return ["Eintrag ist kein Objekt"]
+    errors = []
+    eid = entry.get("id")
+    if not isinstance(eid, str) or not re.fullmatch(r"[a-z0-9_\-]+", eid):
+        errors.append("id fehlt oder ungültig (nur a-z, 0-9, _ und -)")
+    if entry.get("pillar") not in PILLAR_TARGETS:
+        errors.append(f"pillar muss eines von {sorted(PILLAR_TARGETS)} sein")
+    if entry.get("format") not in FORMAT_LABEL:
+        errors.append(f"format muss eines von {sorted(FORMAT_LABEL)} sein")
+    caption = entry.get("caption")
+    if not isinstance(caption, str) or not caption.strip():
+        errors.append("caption fehlt")
+        caption = ""
+    else:
+        sentences = len(re.findall(r"[.!?…]+(?=\s|$)", caption)) or 1
+        if sentences > 3:
+            errors.append(f"caption hat {sentences} Sätze (höchstens 3)")
+        if len(caption) > 300:
+            errors.append("caption ist zu lang (über 300 Zeichen)")
+    cta = entry.get("cta")
+    if cta is not None and (not isinstance(cta, str) or not cta.strip()):
+        errors.append("cta ist leer")
+        cta = ""
+    if len(EMOJI_RE.findall(caption + " " + (cta or ""))) > 1:
+        errors.append("mehr als 1 Emoji in Caption + CTA")
+    tags = entry.get("hashtags")
+    if not isinstance(tags, list) or not 1 <= len(tags) <= 3 \
+            or not all(isinstance(t, str) and re.fullmatch(r"#\w+", t) for t in tags):
+        errors.append("hashtags: 1 bis 3 zusätzliche Hashtags mit # (#knospi #pflanzenliebe kommen automatisch dazu)")
+    seasons = entry.get("seasons")
+    if seasons is not None and (not isinstance(seasons, list) or not set(seasons) <= SEASONS):
+        errors.append(f"seasons darf nur {sorted(SEASONS)} enthalten")
+    if entry.get("scene") is None:
+        text = entry.get("image_text")
+        if not isinstance(text, str) or not text.strip():
+            errors.append("image_text fehlt")
+        elif _words(text) > 7:
+            errors.append(f"image_text hat {_words(text)} Wörter (höchstens 7)")
+        if entry.get("expression") not in MOOD_TEMPLATE:
+            errors.append(f"expression muss eines von {sorted(MOOD_TEMPLATE)} sein")
+    else:
+        errors += _validate_scene(entry["scene"])
+    return errors
+
+
+def missing_assets(entry):
+    """Dateien, die für dieses Bild fehlen (Figuren-Assets bzw. Knospi-Kachel)."""
+    if entry.get("scene"):
+        needed = [char_path(m["char"], m["expression"]) for m in entry["scene"]["cast"]]
+    else:
+        needed = [MOOD_TEMPLATE[entry["expression"]]]
+    return [p for p in needed if not p.exists()]
+
+
+def load_pool():
+    if not POOL_PATH.exists():
+        return []
+    try:
+        data = json.loads(POOL_PATH.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        print(f"WARNUNG: content_pool.json ist kein gültiges JSON ({e}). Pool wird übersprungen.")
+        return []
+    entries = data.get("entries", []) if isinstance(data, dict) else data
+    return entries if isinstance(entries, list) else []
+
+
+def usable_pool(pool):
+    """Gültige Einträge. Ungültige werden mit Begründung gemeldet und übersprungen."""
+    good = []
+    for entry in pool:
+        errors = validate_entry(entry)
+        if errors:
+            name = entry.get("id", "?") if isinstance(entry, dict) else "?"
+            print(f"WARNUNG: Pool-Eintrag '{name}' übersprungen: {'; '.join(errors)}")
+        else:
+            good.append(entry)
+    return good
+
+
+def choose_pool_entry(pool, state, now, rng=random):
+    """Wählt einen Pool-Eintrag mit redaktioneller Begründung.
+    Berücksichtigt: Jahreszeit, Wiederholungen (120 Tage), letztes Format, Verteilung der
+    Inhalts-Säulen, CTA-Takt und ob alle Bilder/Figuren vorhanden sind.
+    Gibt (eintrag, begründung, cta_verwenden) zurück oder (None, grund, False)."""
+    history = (state.get("pool") or {}).get("history", [])
+    cutoff = now - timedelta(days=POOL_REPEAT_DAYS)
+    recently_used = {h.get("id") for h in history if (_parse_iso(h.get("ts")) or now) >= cutoff}
+    season = season_of(now)
+
+    candidates = []
+    skipped_assets = 0
+    for entry in pool:
+        if entry["id"] in recently_used:
+            continue
+        if entry.get("seasons") and season not in entry["seasons"]:
+            continue
+        if missing_assets(entry):
+            skipped_assets += 1
+            continue
+        candidates.append(entry)
+    if not candidates:
+        hint = f" ({skipped_assets} Einträge warten auf fehlende Figuren-Assets)" if skipped_assets else ""
+        return None, "kein passender, noch nicht verwendeter Inhalt verfügbar" + hint, False
+
+    last_format = history[-1].get("format") if history else None
+    different = [e for e in candidates if e["format"] != last_format]
+    if different:
+        candidates = different
+
+    recent = history[-12:]
+    total = len(recent)
+    counts = {p: sum(1 for h in recent if h.get("pillar") == p) for p in PILLAR_TARGETS}
+    since_cta = (state.get("pool") or {}).get("since_cta", 0)
+    cta_due = since_cta >= CTA_EVERY - 1
+
+    weights = []
+    for entry in candidates:
+        pillar = entry["pillar"]
+        actual = counts[pillar] / total if total else PILLAR_TARGETS[pillar]
+        weight = max(0.1, PILLAR_TARGETS[pillar] - actual + 0.25)
+        if entry.get("seasons"):
+            weight *= 1.5
+        if cta_due and entry.get("cta"):
+            weight *= 2
+        weights.append(weight)
+    entry = rng.choices(candidates, weights=weights, k=1)[0]
+
+    use_cta = bool(cta_due and entry.get("cta"))
+    actual = counts[entry["pillar"]] / total if total else 0
+    weekday = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"][now.weekday()]
+    reason = (
+        f"{weekday}-Slot · Säule {PILLAR_LABEL[entry['pillar']]} "
+        f"(zuletzt {actual:.0%}, Wunsch {PILLAR_TARGETS[entry['pillar']]:.0%}) · "
+        f"Format {FORMAT_LABEL[entry['format']]}"
+    )
+    if entry.get("seasons"):
+        reason += " · passt zur Jahreszeit"
+    if last_format and entry["format"] != last_format:
+        reason += " · anderes Format als der Post davor"
+    reason += " · in den letzten 120 Tagen nicht verwendet"
+    if use_cta:
+        reason += " · mit sanftem Aufruf (jeder dritte Post)"
+    return entry, reason, use_cta
+
+
+def compose_caption(entry, use_cta):
+    parts = [entry["caption"].strip()]
+    if use_cta and entry.get("cta"):
+        parts.append(entry["cta"].strip())
+    tags = []
+    for tag in ["#knospi", "#pflanzenliebe"] + list(entry["hashtags"]):
+        if tag.lower() not in [t.lower() for t in tags]:
+            tags.append(tag)
+    return "\n\n".join(parts) + "\n\n" + " ".join(tags)
+
+
+def entry_image_text(entry):
+    if entry.get("scene"):
+        return " / ".join(f"{l['char'].capitalize()}: {l['text']}" for l in entry["scene"]["lines"])
+    return entry["image_text"]
+
+
+# --- Entwürfe & GitHub-Issues -------------------------------------------------
+
+def draft_json_path(draft_id):
+    return DRAFTS_DIR / f"{draft_id}.json"
+
+
+def load_drafts():
+    drafts = []
+    if DRAFTS_DIR.exists():
+        for path in sorted(DRAFTS_DIR.glob("*.json")):
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+            except json.JSONDecodeError:
+                print(f"WARNUNG: {path.name} ist kein gültiges JSON und wird ignoriert.")
+                continue
+            if isinstance(data, dict) and data.get("id"):
+                drafts.append(data)
+    return drafts
+
+
+def save_draft(draft):
+    DRAFTS_DIR.mkdir(exist_ok=True)
+    draft_json_path(draft["id"]).write_text(json.dumps(draft, indent=2, ensure_ascii=False), encoding="utf-8")
+
+
+def _gh_headers():
+    return {
+        "Authorization": f"Bearer {os.environ['GITHUB_TOKEN']}",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+
+
+def gh_create_issue(title, body, assignee=None):
+    """Legt ein GitHub-Issue an (löst die E-Mail/Benachrichtigung an dich aus). None bei Fehler."""
+    repo = os.environ.get("GITHUB_REPOSITORY")
+    if not repo or not os.environ.get("GITHUB_TOKEN"):
+        print("HINWEIS: Kein GITHUB_REPOSITORY/GITHUB_TOKEN – Issue wird nicht angelegt.")
+        return None
+    payload = {"title": title, "body": body}
+    if assignee:
+        payload["assignees"] = [assignee]
+    try:
+        resp = requests.post(f"https://api.github.com/repos/{repo}/issues", json=payload,
+                             headers=_gh_headers(), timeout=30)
+        if resp.status_code == 422 and assignee:  # Zuweisung nicht möglich -> ohne versuchen
+            payload.pop("assignees")
+            resp = requests.post(f"https://api.github.com/repos/{repo}/issues", json=payload,
+                                 headers=_gh_headers(), timeout=30)
+        resp.raise_for_status()
+        return resp.json()["number"]
+    except Exception as e:  # ein Problem mit dem Issue darf keinen Lauf abbrechen
+        print(f"WARNUNG: Issue konnte nicht angelegt werden: {e}")
+        return None
+
+
+def gh_comment(number, text):
+    repo = os.environ.get("GITHUB_REPOSITORY")
+    if not repo or not number or not os.environ.get("GITHUB_TOKEN"):
+        return
+    try:
+        requests.post(f"https://api.github.com/repos/{repo}/issues/{number}/comments",
+                      json={"body": text}, headers=_gh_headers(), timeout=30).raise_for_status()
+    except Exception as e:
+        print(f"WARNUNG: Kommentar im Issue #{number} fehlgeschlagen: {e}")
+
+
+def gh_close_issue(number):
+    repo = os.environ.get("GITHUB_REPOSITORY")
+    if not repo or not number or not os.environ.get("GITHUB_TOKEN"):
+        return
+    try:
+        requests.patch(f"https://api.github.com/repos/{repo}/issues/{number}",
+                       json={"state": "closed"}, headers=_gh_headers(), timeout=30).raise_for_status()
+    except Exception as e:
+        print(f"WARNUNG: Issue #{number} konnte nicht geschlossen werden: {e}")
+
+
+def public_raw_url(path):
+    repo = os.environ["GITHUB_REPOSITORY"]
+    branch = os.environ.get("GITHUB_REF_NAME", "main")
+    rel = Path(path).resolve().relative_to(Path(__file__).parent.resolve()) if Path(path).is_absolute() else Path(path)
+    return f"https://raw.githubusercontent.com/{repo}/{branch}/{rel.as_posix()}"
+
+
+def draft_issue_body(draft, image_url):
+    owner = os.environ.get("GITHUB_REPOSITORY", "/").split("/")[0]
+    caption_quote = "\n".join("> " + line if line else ">" for line in draft["caption"].split("\n"))
+    return (
+        f"@{owner} Knospi hat einen neuen Entwurf vorbereitet.\n\n"
+        f"![Vorschau]({image_url})\n\n"
+        f"**Format:** {FORMAT_LABEL.get(draft['format'], draft['format'])} · "
+        f"**Säule:** {PILLAR_LABEL.get(draft['pillar'], draft['pillar'])}\n\n"
+        f"**Bildtext:** {draft['image_text']}\n\n"
+        f"**Caption:**\n{caption_quote}\n\n"
+        f"**Warum dieser Post:** {draft['reason']}\n\n"
+        f"---\n"
+        f"**Freigeben:** schreib unten einen Kommentar mit `ok`  \n"
+        f"**Verwerfen:** schreib `nein`\n\n"
+        f"Nach der Freigabe postet Knospi bei der nächsten Gelegenheit "
+        f"(nicht zwischen {QUIET_START:%H}:{QUIET_START:%M} und {QUIET_END:%H}:{QUIET_END:%M} Uhr). "
+        f"Ohne Antwort verfällt der Entwurf nach {DRAFT_REVIEW_DAYS} Tagen.\n\n"
+        f"<!-- knospi-draft:{draft['id']} -->"
+    )
+
+
+def pool_draft_due(state, now):
+    """Ist heute ein Pool-Slot offen? (Slot-Wochentag, Uhrzeit, Wochenlimit, kein offener Entwurf)"""
+    if now.weekday() not in POOL_WEEKDAYS:
+        return False
+    if not (POOL_DRAFT_START <= now.time() <= POOL_DRAFT_END):
+        return False
+    history = state["pool"]["history"]
+    this_week = [h for h in history
+                 if (ts := _parse_iso(h.get("ts"))) and ts.astimezone(LOCAL_TZ).isocalendar()[:2] == now.isocalendar()[:2]]
+    if len(this_week) >= POOL_MAX_PER_WEEK:
+        return False
+    if any(_is_today(h, now) for h in history):
+        return False
+    if any(d.get("status") in ("draft", "approved") for d in load_drafts()):
+        return False
+    return True
+
+
+def create_pool_draft(state, now, dry_run=False, rng=random):
+    """Wählt einen Pool-Inhalt, rendert das Bild, legt Entwurf + GitHub-Issue an. Gibt den neuen Zustand zurück."""
+    pool = usable_pool(load_pool())
+    entry, reason, use_cta = choose_pool_entry(pool, state, now, rng)
+    if entry is None:
+        print(f"Pool: {reason}.")
+        return state
+
+    draft_id = f"{now:%Y%m%d}-{entry['id']}"
+    image_path = DRAFTS_DIR / f"{draft_id}.png"
+    render_pool_image(entry, image_path)
+    draft = {
+        "id": draft_id, "entry_id": entry["id"], "status": "draft",
+        "created_at": now.isoformat(), "format": entry["format"], "pillar": entry["pillar"],
+        "image": f"drafts/{draft_id}.png", "image_text": entry_image_text(entry),
+        "caption": compose_caption(entry, use_cta), "reason": reason, "used_cta": use_cta,
+        "issue_number": None, "published_at": None,
+    }
+    print(f"Entwurf '{draft_id}' gerendert: {image_path}")
+    print(f"  Begründung: {reason}")
+    print(f"  Bildtext:   {draft['image_text']}")
+    print(f"  Caption:\n{draft['caption']}")
+    if dry_run:
+        print("(--dry-run) Kein Entwurf gespeichert, kein Issue, kein Commit.")
+        return state
+
+    new_state = dict(state)
+    pool_state = dict(state["pool"])
+    pool_state["history"] = (state["pool"]["history"] + [{
+        "id": entry["id"], "pillar": entry["pillar"], "format": entry["format"],
+        "ts": now.isoformat(), "cta": use_cta,
+    }])[-60:]
+    pool_state["since_cta"] = 0 if use_cta else state["pool"].get("since_cta", 0) + 1
+    new_state["pool"] = pool_state
+
+    save_draft(draft)
+    save_state(new_state)
+    commit_paths([image_path, draft_json_path(draft_id), STATE_PATH], f"draft: {draft_id}")
+
+    owner = os.environ.get("GITHUB_REPOSITORY", "/").split("/")[0]
+    number = gh_create_issue(f"Entwurf: {draft['image_text'][:60]}",
+                             draft_issue_body(draft, public_raw_url(image_path)), assignee=owner)
+    if number:
+        draft["issue_number"] = number
+        save_draft(draft)
+        commit_paths([draft_json_path(draft_id)], f"draft: Issue #{number} verknüpft")
+        print(f"Issue #{number} angelegt – du bekommst eine Benachrichtigung von GitHub.")
+    return new_state
+
+
+def publish_draft(draft, state, now):
+    """Veröffentlicht einen freigegebenen Entwurf und aktualisiert Entwurf, Protokoll und Issue."""
+    url = public_raw_url(draft["image"])
+    result = post_feed_image(url, draft["caption"])
+    print(f"Instagram-Beitrag gepostet: {result}")
+    draft["status"] = "published"
+    draft["published_at"] = now.isoformat()
+    new_state = record_post(state, now, "pool", extra={"id": draft["id"]})
+    save_draft(draft)
+    save_state(new_state)
+    commit_paths([draft_json_path(draft["id"]), STATE_PATH], f"state: Pool-Post {draft['id']} gepostet")
+    gh_comment(draft.get("issue_number"), "Gepostet. Knospi bedankt sich. 🌿")
+    gh_close_issue(draft.get("issue_number"))
+    return new_state
+
+
+def expire_old_drafts(now, dry_run=False):
+    """Entwürfe ohne Antwort (3 Tage) bzw. freigegebene, aber nie gepostete (7 Tage) verfallen."""
+    for draft in load_drafts():
+        created = _parse_iso(draft.get("created_at"))
+        if created is None:
+            continue
+        age = now - created
+        limit = DRAFT_REVIEW_DAYS if draft.get("status") == "draft" else DRAFT_EXPIRY_DAYS
+        if draft.get("status") in ("draft", "approved") and age > timedelta(days=limit):
+            print(f"Entwurf {draft['id']} ist verfallen ({draft['status']}, {age.days} Tage alt).")
+            if dry_run:
+                continue
+            draft["status"] = "expired"
+            save_draft(draft)
+            commit_paths([draft_json_path(draft["id"])], f"draft: {draft['id']} verfallen")
+            gh_comment(draft.get("issue_number"), "Verfallen: keine Antwort bzw. nicht gepostet. Kein Problem, es kommt ein neuer Vorschlag.")
+            gh_close_issue(draft.get("issue_number"))
+
+
+APPROVE_WORDS = {"ok", "okay", "ja", "freigeben", "freigabe", "passt", "yes", "👍"}
+REJECT_WORDS = {"nein", "no", "verwerfen", "ablehnen", "stop", "👎"}
+
+
+def handle_reply():
+    """Wird vom Freigabe-Workflow aufgerufen, wenn du unter einem Entwurf-Issue kommentierst.
+    'ok' gibt frei, 'nein' verwirft. Gepostet wird erst vom regulären Lauf (Tageslimit, Ruhezeit)."""
+    comment = os.environ.get("COMMENT_BODY", "").strip().lower()
+    issue_body = os.environ.get("ISSUE_BODY", "")
+    number = int(os.environ.get("ISSUE_NUMBER", "0") or 0)
+    match = re.search(r"knospi-draft:([\w\-]+)", issue_body)
+    if not match:
+        print("Kein Entwurf in diesem Issue gefunden.")
+        return
+    path = draft_json_path(match.group(1))
+    if not path.exists():
+        gh_comment(number, "Dieser Entwurf existiert nicht mehr im Repository.")
+        return
+    draft = json.loads(path.read_text(encoding="utf-8"))
+
+    tokens = re.findall(r"[\wäöüß👍👎]+", comment)
+    word = tokens[0] if tokens else ""
+    if word not in APPROVE_WORDS | REJECT_WORDS:
+        gh_comment(number, "Schreib `ok` zum Freigeben oder `nein` zum Verwerfen.")
+        return
+    if draft.get("status") != "draft":
+        gh_comment(number, f"Dieser Entwurf ist schon '{draft.get('status')}'.")
+        return
+
+    if word in APPROVE_WORDS:
+        draft["status"] = "approved"
+        draft["approved_at"] = datetime.now(LOCAL_TZ).isoformat()
+        save_draft(draft)
+        commit_paths([path], f"draft: {draft['id']} freigegeben")
+        gh_comment(number, "Freigegeben. Knospi postet bei der nächsten Gelegenheit "
+                           f"(nicht zwischen {QUIET_START:%H}:{QUIET_START:%M} und {QUIET_END:%H}:{QUIET_END:%M} Uhr, "
+                           "maximal ein Pool-Post pro Tag).")
+    else:
+        draft["status"] = "rejected"
+        save_draft(draft)
+        commit_paths([path], f"draft: {draft['id']} verworfen")
+        gh_comment(number, "Verworfen. Dieser Inhalt kommt vorerst nicht wieder vor.")
+        gh_close_issue(number)
+
+
+# ---------------------------------------------------------------------------
 # Hauptlogik
 # ---------------------------------------------------------------------------
 
-def main():
-    dry_run = "--dry-run" in sys.argv
+SENSOR_TAGS = {
+    "tip": "#knospi #pflanzenliebe #pflanzenpflege",
+    "improve": "#knospi #pflanzenliebe #danke",
+    "daily": "#knospi #pflanzenliebe #pflanzenwg",
+}
 
-    reading = fetch_latest_reading()
-    prev_state = load_state()
-    # Altes state.json kann noch "hum": "low" enthalten (aus der Zeit, als trockene
-    # Luft ein Problem war). Ohne diese Korrektur käme ein unsinniger "Luftfeuchte
-    # wieder gut"-Post.
-    if not HUM_LOW_IS_PROBLEM and prev_state.get("hum") == "low":
-        prev_state["hum"] = "ok"
-    states = evaluate(reading, prev_state)
 
-    events, suppressed = decide_events(prev_state, states)
-    daily_due = is_daily_due(prev_state.get("last_daily"))
+def sensor_caption(plan, reading):
+    return (
+        f"{plan['text']}\n\n"
+        f"🌿 {PLANT_NAME} · {SPECIES_SHORT}\n"
+        f"Erde {reading['soil']:.0f}% · Luft {reading['hum']:.0f}% · {reading['temp']:.1f}°C\n\n"
+        f"{SENSOR_TAGS.get(plan['kind'], SENSOR_TAGS['daily'])}"
+    )
 
+
+def build_sensor_plans(state, readings, now):
+    """Alle Sensor-Posts, die jetzt fachlich fällig wären, in Prioritätsreihenfolge
+    (Danke vor 'wird schlecht' vor Hallo bei Problem). Gibt (pläne, reading, states) zurück."""
+    reading = readings[-1]
+    age = reading_age_hours(reading, now)
+    if age is not None and age > MAX_READING_AGE_HOURS:
+        print(f"Messwerte sind {age:.1f} Stunden alt (mehr als {MAX_READING_AGE_HOURS} h) – keine Sensor-Posts.")
+        return [], reading, None
+
+    states = evaluate(reading, state)
+    events, suppressed = decide_events(state, states, now)
     if suppressed:
         print(f"Pause aktiv: kein neuer 'wird schlecht'-Post für {', '.join(suppressed)} "
               f"(weniger als {TIP_COOLDOWN_HOURS}h seit dem letzten Post zu diesem Wert).")
 
-    if not events and not daily_due:
-        print("Keine Veränderung und kein täglicher Post fällig – nichts zu tun.")
-        return
-
-    to_post = []
-
-    if daily_due:
-        to_post.append({
-            "text": hello_message(reading, states, thirsty_days(prev_state, states)),
-            "label": "täglicher Hallo-Post",
-            "daily": True,
-        })
-
+    confirmed = confirmed_states(readings, state)
+    plans = []
+    label_of = {"soil": "Erdfeuchte", "temp": "Temperatur", "hum": "Luftfeuchte"}
+    improves, tips = [], []
     for kind, key, old, new in events:
-        label = {"soil": "Erdfeuchte", "temp": "Temperatur", "hum": "Luftfeuchte"}[key]
-        if kind == "tip":
-            to_post.append({
-                "text": tip_message(reading, key, new),
-                "label": f"{label} kippt ({old} -> {new})",
-                "key": key,
-            })
-        else:
-            to_post.append({
-                "text": improve_message(reading, key, states),
-                "label": f"{label} verbessert ({old} -> {new})",
-                "key": key,
-            })
-
-    for post in to_post:
-        image_path = render_story(reading, states, post["text"])
-        print(f"Story gerendert: {image_path} — {post['label']}")
-
-        if dry_run:
-            print("(--dry-run) Kein echter Post, kein Commit.")
+        if confirmed[key] != states[key]:
+            print(f"{label_of[key]}: Zustand '{new}' ist noch nicht stabil (Ausreißer?) – warte ab.")
             continue
+        if kind == "tip":
+            ok, why = tip_allowed(state, key, new, reading, now)
+            if not ok:
+                print(f"{label_of[key]} kippt ({old} -> {new}), aber: {why} – kein Post.")
+                continue
+            tips.append({"kind": "tip", "key": key, "text": tip_message(reading, key, new),
+                         "label": f"{label_of[key]} kippt ({old} -> {new})"})
+        else:
+            improves.append({"kind": "improve", "key": key, "text": improve_message(reading, key, states),
+                             "label": f"{label_of[key]} verbessert ({old} -> {new})"})
+    plans += improves + tips
 
-        # Nur das Bild committen - state.json bleibt bewusst unverändert, bis
-        # Instagram den Post bestätigt hat. Schlägt irgendetwas unten fehl
-        # (Netzwerk, Instagram-Fehler, Timeout beim Verarbeiten), bricht die
-        # Funktion mit einer Exception ab und state.json wurde nie überschrieben
-        # -> der nächste Lauf sieht den Post immer noch als "nicht erledigt" an
-        # und versucht es erneut, statt ihn stillschweigend zu verschlucken.
-        public_url = commit_and_get_public_url(image_path)
-        print(f"Öffentliche Bild-URL: {public_url}")
+    problem = primary_problem(states)
+    if problem and is_daily_due(state.get("last_daily"), now):
+        key, st = problem
+        if key == "hum" or state.get(key) == "ok":
+            # Luft zu feucht (eigener Text) bzw. Zustand wurde noch nie gemeldet
+            # (z.B. weil das Wochenlimit den 'wird schlecht'-Post zurückgehalten hat)
+            text = tip_message(reading, key, st)
+        else:
+            text = hello_message(reading, states, thirsty_days(state, states, now))
+        plans.append({"kind": "daily", "key": key, "state": st, "text": text,
+                      "label": "täglicher Hallo-Post (es geht ihr gerade nicht gut)"})
+    elif not problem and is_daily_due(state.get("last_daily"), now):
+        print("Alles in Ordnung – kein täglicher Hallo-Post (der kommt nur, wenn es Knospi schlecht geht).")
+    return plans, reading, states
 
-        # Pause, damit raw.githubusercontent.com das neue Bild sicher ausliefert,
-        # bevor Instagram versucht, es abzurufen.
-        time.sleep(15)
 
-        caption = (
-            f"{post['text']}\n\n"
-            f"🌿 {PLANT_NAME} · {SPECIES_SHORT}\n"
-            f"Erde {reading['soil']:.0f}% · Luft {reading['hum']:.0f}% · {reading['temp']:.1f}°C"
-        )
-        result = post_feed_image(public_url, caption)
-        print(f"Instagram-Beitrag gepostet: {result}")
+def execute_sensor_plan(plan, state, reading, states, now, dry_run):
+    image_path = render_story(reading, states, plan["text"])
+    print(f"Story gerendert: {image_path} — {plan['label']}")
+    caption = sensor_caption(plan, reading)
+    if dry_run:
+        print(f"(--dry-run) Kein echter Post, kein Commit. Caption:\n{caption}")
+        return state
 
-        # Erst JETZT, nachdem Instagram den Post bestätigt hat, gilt er als
-        # erledigt: state.json aktualisieren und in einem eigenen Commit sichern.
-        # Nur der Wert, zu dem gerade gepostet wurde, wird übernommen (bzw. das
-        # Hallo-Datum). Alles andere bleibt, wie es war - so geht nichts verloren,
-        # falls ein späterer Post in diesem Lauf scheitert, und zurückgehaltene
-        # Werte (Pause) werden später nachgeholt.
-        now_iso = datetime.now(LOCAL_TZ).isoformat()
-        new_state = dict(prev_state)
-        new_state["last_event"] = dict(prev_state.get("last_event") or {})
-        if post.get("daily"):
-            new_state["last_daily"] = now_iso
-        if post.get("key"):
-            new_state[post["key"]] = states[post["key"]]
-            new_state["last_event"][post["key"]] = now_iso
-        save_state(new_state)
-        commit_paths([STATE_PATH], f"state: {post['label']}")
+    # Nur das Bild committen - state.json bleibt bewusst unverändert, bis Instagram den Post
+    # bestätigt hat. Schlägt etwas fehl, wurde nie 'erledigt' gespeichert -> nächster Lauf versucht es erneut.
+    public_url = commit_and_get_public_url(image_path)
+    print(f"Öffentliche Bild-URL: {public_url}")
+    time.sleep(15)  # raw.githubusercontent.com braucht einen Moment, bis das Bild ausgeliefert wird
+    result = post_feed_image(public_url, caption)
+    print(f"Instagram-Beitrag gepostet: {result}")
 
-        prev_state = new_state
+    now_iso = now.isoformat()
+    new_state = dict(state)
+    new_state["last_event"] = dict(state.get("last_event") or {})
+    if plan["kind"] == "daily":
+        new_state["last_daily"] = now_iso
+        new_state = record_post(new_state, now, "daily", plan.get("key"), plan.get("state"))
+    else:
+        key = plan["key"]
+        new_state[key] = states[key]
+        new_state["last_event"][key] = now_iso
+        new_state = record_post(new_state, now, plan["kind"], key, states[key])
+    save_state(new_state)
+    commit_paths([STATE_PATH], f"state: {plan['label']}")
+    return new_state
+
+
+def main():
+    args = sys.argv[1:]
+    if "--handle-reply" in args:
+        handle_reply()
+        return
+    if "--check-pool" in args:
+        pool = load_pool()
+        bad = 0
+        for entry in pool:
+            errors = validate_entry(entry)
+            name = entry.get("id", "?") if isinstance(entry, dict) else "?"
+            if errors:
+                bad += 1
+                print(f"FEHLER {name}: {'; '.join(errors)}")
+            elif missing_assets(entry):
+                print(f"wartet auf Assets {name}: {', '.join(str(p.relative_to(Path(__file__).parent)) for p in missing_assets(entry))}")
+        print(f"{len(pool)} Einträge, {bad} fehlerhaft.")
+        sys.exit(1 if bad else 0)
+
+    dry_run = "--dry-run" in args
+    force_draft = "--make-draft" in args
+    now = datetime.now(LOCAL_TZ)
+
+    state = load_state()
+    # Altes state.json kann noch "hum": "low" enthalten (aus der Zeit, als trockene Luft ein
+    # Problem war). Ohne diese Korrektur käme ein unsinniger "Luftfeuchte wieder gut"-Post.
+    if not HUM_LOW_IS_PROBLEM and state.get("hum") == "low":
+        state["hum"] = "ok"
+
+    expire_old_drafts(now, dry_run)
+
+    # 1) Sensor-Posts (Danke / wird schlecht / Hallo bei Problem) - nur wenn Daten da und aktuell sind
+    plans, reading, states = [], None, None
+    try:
+        readings = fetch_readings(STABLE_READINGS)
+    except Exception as e:
+        print(f"WARNUNG: Sensordaten nicht abrufbar ({e}) – keine Sensor-Posts in diesem Lauf.")
+        readings = []
+    if readings:
+        plans, reading, states = build_sensor_plans(state, readings, now)
+
+    # 2) Freigegebener Pool-Entwurf hat Vorrang (von Hand freigegeben, zählt nicht zum Tageslimit
+    #    der automatischen Posts, aber höchstens einer pro Tag und nie in der Ruhezeit)
+    approved = [d for d in load_drafts() if d.get("status") == "approved"]
+    posted = False
+    if approved and not in_quiet_hours(now) and not pool_posts_today(state, now):
+        draft = sorted(approved, key=lambda d: d.get("approved_at") or d.get("created_at") or "")[0]
+        print(f"Freigegebener Entwurf wird gepostet: {draft['id']}")
+        if dry_run:
+            print(f"(--dry-run) Würde posten:\n{draft['caption']}")
+        else:
+            state = publish_draft(draft, state, now)
+        posted = True
+    elif approved:
+        print("Freigegebener Entwurf wartet (Ruhezeit oder heute schon ein Pool-Post).")
+
+    # 3) Genau ein automatischer Sensor-Post pro Lauf, wenn Ruhezeit und Tageslimit es erlauben
+    if not posted and plans:
+        allowed, why = automated_post_allowed(state, now)
+        if allowed:
+            state = execute_sensor_plan(plans[0], state, reading, states, now, dry_run)
+            posted = True
+        else:
+            print(f"Sensor-Post '{plans[0]['label']}' wartet: {why}.")
+    elif not posted and not approved:
+        print("Keine Veränderung und kein Post fällig – nichts zu tun.")
+
+    # 4) Neuer Pool-Entwurf zur Freigabe (Slot-Tag, Wochenlimit, kein offener Entwurf)
+    if force_draft or pool_draft_due(state, now):
+        state = create_pool_draft(state, now, dry_run)
 
 
 if __name__ == "__main__":
