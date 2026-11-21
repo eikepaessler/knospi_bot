@@ -121,6 +121,9 @@ POOL_WEEKDAYS = {0, 2, 3, 6}
 POOL_MAX_PER_WEEK = 4
 POOL_DRAFT_START = dtime(10, 0)
 POOL_DRAFT_END = dtime(18, 0)
+# True  = Pool-Posts werden als Entwurf angelegt und gehen erst nach deinem "ok" im GitHub-Issue raus.
+# False = Pool-Posts gehen ohne Freigabe direkt raus (Tageslimit und Ruhezeit gelten weiterhin).
+REQUIRE_APPROVAL = False
 POOL_REPEAT_DAYS = 120      # derselbe Inhalt frühestens nach so vielen Tagen wieder
 DRAFT_REVIEW_DAYS = 3       # Entwürfe, auf die du nicht antwortest, verfallen nach so vielen Tagen
 DRAFT_EXPIRY_DAYS = 7       # freigegebene, aber (z.B. wegen Tageslimit) nicht gepostete Entwürfe verfallen danach
@@ -167,6 +170,7 @@ CHAR_SEARCH_DIRS = [
     "marketing/figuren/figuren/png/{c}",
     "marketing/figuren/{c}",
     "figuren/png/{c}",
+    "png/{c}",
 ]
 OUTPUT_DIR = Path(__file__).parent / "output"
 FONT_DIR = Path(__file__).parent / "assets" / "fonts"
@@ -1454,7 +1458,9 @@ def create_pool_draft(state, now, dry_run=False, rng=random):
     image_path = DRAFTS_DIR / f"{draft_id}.png"
     render_pool_image(entry, image_path)
     draft = {
-        "id": draft_id, "entry_id": entry["id"], "status": "draft",
+        "id": draft_id, "entry_id": entry["id"],
+        "status": "draft" if REQUIRE_APPROVAL else "approved",
+        "approved_at": None if REQUIRE_APPROVAL else now.isoformat(),
         "created_at": now.isoformat(), "format": entry["format"], "pillar": entry["pillar"],
         "image": f"drafts/{draft_id}.png", "image_text": entry_image_text(entry),
         "caption": compose_caption(entry, use_cta), "reason": reason, "used_cta": use_cta,
@@ -1481,6 +1487,10 @@ def create_pool_draft(state, now, dry_run=False, rng=random):
     save_state(new_state)
     commit_paths([image_path, draft_json_path(draft_id), STATE_PATH], f"draft: {draft_id}")
 
+    if not REQUIRE_APPROVAL:
+        print("Freigabe ist ausgeschaltet – der Beitrag wird direkt gepostet.")
+        return new_state
+
     owner = os.environ.get("GITHUB_REPOSITORY", "/").split("/")[0]
     number = gh_create_issue(f"Entwurf: {draft['image_text'][:60]}",
                              draft_issue_body(draft, public_raw_url(image_path)), assignee=owner)
@@ -1495,6 +1505,7 @@ def create_pool_draft(state, now, dry_run=False, rng=random):
 def publish_draft(draft, state, now):
     """Veröffentlicht einen freigegebenen Entwurf und aktualisiert Entwurf, Protokoll und Issue."""
     url = public_raw_url(draft["image"])
+    time.sleep(15)  # frisch committete Bilder brauchen einen Moment, bis raw.githubusercontent.com sie ausliefert
     result = post_feed_image(url, draft["caption"])
     print(f"Instagram-Beitrag gepostet: {result}")
     draft["status"] = "published"
@@ -1716,22 +1727,29 @@ def main():
     if readings:
         plans, reading, states = build_sensor_plans(state, readings, now)
 
-    # 2) Freigegebener Pool-Entwurf hat Vorrang (von Hand freigegeben, zählt nicht zum Tageslimit
+    # 2) Neuer Pool-Beitrag fällig? (Slot-Tag, Wochenlimit, kein offener Entwurf). Ohne Freigabe geht er
+    #    im selben Lauf raus, mit Freigabe wartet er als Entwurf auf dein "ok".
+    if force_draft or pool_draft_due(state, now):
+        state = create_pool_draft(state, now, dry_run)
+
+
+    # 3) Bereiter Pool-Beitrag hat Vorrang vor Sensor-Posts (von Hand freigegeben, zählt nicht zum Tageslimit
     #    der automatischen Posts, aber höchstens einer pro Tag und nie in der Ruhezeit)
-    approved = [d for d in load_drafts() if d.get("status") == "approved"]
+    approved = [d for d in load_drafts()
+                if d.get("status") == "approved" or (not REQUIRE_APPROVAL and d.get("status") == "draft")]
     posted = False
     if approved and not in_quiet_hours(now) and not pool_posts_today(state, now):
         draft = sorted(approved, key=lambda d: d.get("approved_at") or d.get("created_at") or "")[0]
-        print(f"Freigegebener Entwurf wird gepostet: {draft['id']}")
+        print(f"Pool-Beitrag wird gepostet: {draft['id']}")
         if dry_run:
             print(f"(--dry-run) Würde posten:\n{draft['caption']}")
         else:
             state = publish_draft(draft, state, now)
         posted = True
     elif approved:
-        print("Freigegebener Entwurf wartet (Ruhezeit oder heute schon ein Pool-Post).")
+        print("Pool-Beitrag wartet (Ruhezeit oder heute schon ein Pool-Post).")
 
-    # 3) Genau ein automatischer Sensor-Post pro Lauf, wenn Ruhezeit und Tageslimit es erlauben
+    # 4) Genau ein automatischer Sensor-Post pro Lauf, wenn Ruhezeit und Tageslimit es erlauben
     if not posted and plans:
         allowed, why = automated_post_allowed(state, now)
         if allowed:
@@ -1741,10 +1759,6 @@ def main():
             print(f"Sensor-Post '{plans[0]['label']}' wartet: {why}.")
     elif not posted and not approved:
         print("Keine Veränderung und kein Post fällig – nichts zu tun.")
-
-    # 4) Neuer Pool-Entwurf zur Freigabe (Slot-Tag, Wochenlimit, kein offener Entwurf)
-    if force_draft or pool_draft_due(state, now):
-        state = create_pool_draft(state, now, dry_run)
 
 
 if __name__ == "__main__":
