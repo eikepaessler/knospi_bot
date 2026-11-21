@@ -144,7 +144,7 @@ FORMAT_LABEL = {
     "pflanzenmoment": "Pflanzenmoment",
     "frag_knospi": "Frag Knospi",
     "wg_meeting": "WG-Meeting",
-    "wg_comic": "Pflanzen-WG",
+    "wg_comic": "WG-Comic",
     "behind_the_scenes": "Behind the Scenes",
     "geschenk": "Verschenk-Idee",
     "community": "Community",
@@ -1174,11 +1174,14 @@ def validate_entry(entry):
         errors.append("caption fehlt")
         caption = ""
     else:
+        # Erklärende Wissens-Posts (Knospi klärt das, Mythos, News) dürfen länger sein
+        long_ok = entry.get("pillar") == "wissen" and entry.get("scene") is None
+        max_sent, max_chars = (6, 700) if long_ok else (3, 300)
         sentences = len(re.findall(r"[.!?…]+(?=\s|$)", caption)) or 1
-        if sentences > 3:
-            errors.append(f"caption hat {sentences} Sätze (höchstens 3)")
-        if len(caption) > 300:
-            errors.append("caption ist zu lang (über 300 Zeichen)")
+        if sentences > max_sent:
+            errors.append(f"caption hat {sentences} Sätze (höchstens {max_sent})")
+        if len(caption) > max_chars:
+            errors.append(f"caption ist zu lang (über {max_chars} Zeichen)")
     cta = entry.get("cta")
     if cta is not None and (not isinstance(cta, str) or not cta.strip()):
         errors.append("cta ist leer")
@@ -1189,6 +1192,8 @@ def validate_entry(entry):
     if not isinstance(tags, list) or not 1 <= len(tags) <= 3 \
             or not all(isinstance(t, str) and re.fullmatch(r"#\w+", t) for t in tags):
         errors.append("hashtags: 1 bis 3 zusätzliche Hashtags mit # (#knospi #pflanzenliebe kommen automatisch dazu)")
+    if entry.get("priority") is not None and not isinstance(entry["priority"], int):
+        errors.append("priority muss eine ganze Zahl sein")
     seasons = entry.get("seasons")
     if seasons is not None and (not isinstance(seasons, list) or not set(seasons) <= SEASONS):
         errors.append(f"seasons darf nur {sorted(SEASONS)} enthalten")
@@ -1263,6 +1268,10 @@ def choose_pool_entry(pool, state, now, rng=random):
     if not candidates:
         hint = f" ({skipped_assets} Einträge warten auf fehlende Figuren-Assets)" if skipped_assets else ""
         return None, "kein passender, noch nicht verwendeter Inhalt verfügbar" + hint, False
+
+    top = max(e.get("priority", 0) for e in candidates)
+    if top > 0:  # z.B. die WG-Vorstellung kommt zuerst, sobald alle Figuren-Bilder da sind
+        candidates = [e for e in candidates if e.get("priority", 0) == top]
 
     last_format = history[-1].get("format") if history else None
     different = [e for e in candidates if e["format"] != last_format]
