@@ -34,6 +34,12 @@
       "kind": "pool",
       "key": null,
       "id": "20261121-moment-regen"
+    },
+    {
+      "ts": "2026-11-22T07:01:00.407157+01:00",
+      "kind": "pool",
+      "key": null,
+      "id": "20261121-community-giessrunde"
     }
   ],
   "pool": {

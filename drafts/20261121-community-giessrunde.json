@@ -1,7 +1,7 @@
 {
   "id": "20261121-community-giessrunde",
   "entry_id": "community-giessrunde",
-  "status": "approved",
+  "status": "published",
   "approved_at": "2026-11-21T11:34:43.152413+01:00",
   "created_at": "2026-11-21T11:34:43.152413+01:00",
   "format": "giessrunde",
@@ -12,5 +12,5 @@
   "reason": "Samstag-Slot · Säule Community (zuletzt 0%, Wunsch 20%) · Format Gießrunde · anderes Format als der Post davor · in den letzten 120 Tagen nicht verwendet",
   "used_cta": false,
   "issue_number": null,
-  "published_at": null
+  "published_at": "2026-11-22T07:01:00.407157+01:00"
 }
