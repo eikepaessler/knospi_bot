@@ -6,7 +6,7 @@
       "format": "pflanzenbeichte",
       "expression": "thirsty",
       "image_text": "Du hast geguckt. Nicht gegossen.",
-      "caption": "Ich sag nichts. Ich hänge nur sehr laut.",
+      "caption": "Ich sage nichts. Ich hänge nur sehr laut.",
       "hashtags": [
         "#pflanzenhumor"
       ]
@@ -70,7 +70,7 @@
         "#neuesblatt",
         "#wachstum"
       ],
-      "cta": "Wann hat deine Pflanze zuletzt ein neues Blatt gezeigt?"
+      "cta": "Wann hat deine Pflanze zuletzt ein neues Blatt bekommen?"
     },
     {
       "id": "fotos",
@@ -99,7 +99,7 @@
       "pillar": "entertainment",
       "format": "pflanzenmoment",
       "expression": "happy",
-      "image_text": "Du sagtest Guten Morgen. Ich spürte es.",
+      "image_text": "Dein Guten Morgen kam bei mir an.",
       "caption": "Ob Pflanzen zuhören, weiß keiner. Ich sage nur: Es schadet nicht.",
       "hashtags": [
         "#pflanzenliebe2"
@@ -147,7 +147,7 @@
       "pillar": "entertainment",
       "format": "pflanzenmoment",
       "expression": "thirsty",
-      "image_text": "Hitze! Ich nehme gerne noch eins.",
+      "image_text": "Hitze! Ich nehme noch einen Schluck.",
       "caption": "Im Sommer verdunsten wir mehr. Wirf öfter mal einen Blick auf die Erde.",
       "hashtags": [
         "#sommerhitze"
@@ -242,7 +242,7 @@
       "format": "knospi_klaert_das",
       "expression": "air",
       "image_text": "Trockene Luft? Meist halb so wild.",
-      "caption": "Viele Zimmerpflanzen kommen mit normaler Wohnungsluft gut zurecht. Braune, trockene Blattspitzen können ein Hinweis auf zu trockene Luft sein, haben aber manchmal auch andere Gründe. Besprühen hilft nur kurz. Besser sind mehrere Pflanzen nah beieinander, eine Schale Wasser in der Nähe oder ein Luftbefeuchter. Empfindliche Arten wie Calathea freuen sich darüber am meisten.",
+      "caption": "Viele Zimmerpflanzen kommen mit normaler Wohnungsluft gut zurecht. Braune, trockene Blattspitzen können ein Hinweis auf zu trockene Luft sein, haben aber manchmal auch andere Gründe. Besprühen hilft nur kurz. Besser sind mehrere Pflanzen nah beieinander, eine Schale Wasser in der Nähe oder ein Luftbefeuchter. Empfindliche Arten wie Calatheen freuen sich darüber am meisten.",
       "hashtags": [
         "#luftfeuchte",
         "#pflanzentipps"
@@ -270,7 +270,7 @@
       "format": "knospi_klaert_das",
       "expression": "happy",
       "image_text": "Zimmerwarm gießen, bitte.",
-      "caption": "Gieße mit Wasser auf Zimmertemperatur. Eiskaltes Wasser kann die Wurzeln schocken. Gieße lieber gründlich und dafür seltener, statt jeden Tag einen kleinen Schluck. So wachsen die Wurzeln tiefer und die Pflanze wird robuster.",
+      "caption": "Gieße mit zimmerwarmem Wasser. Eiskaltes Wasser kann die Wurzeln schocken. Gieße lieber gründlich und dafür seltener, statt jeden Tag einen kleinen Schluck. So wachsen die Wurzeln tiefer und die Pflanze wird robuster.",
       "hashtags": [
         "#giessen",
         "#pflanzentipps"
@@ -294,7 +294,7 @@
       "format": "knospi_klaert_das",
       "expression": "happy",
       "image_text": "Ich bin eine Forellenbegonie. Wegen der Punkte.",
-      "caption": "Die Begonia maculata stammt aus Brasilien und hat ihre silbernen Punkte wie ein Forellenmuster auf den Blättern. Sie mag helles, indirektes Licht, Temperaturen zwischen 18 und 25 Grad und Erde, die weder austrocknet noch nass bleibt. Auch etwas höhere Luftfeuchte findet sie gut.",
+      "caption": "Die Begonia maculata stammt aus Brasilien und trägt silberne Punkte auf den Blättern, die an eine Forelle erinnern. Sie mag helles, indirektes Licht, Temperaturen zwischen 18 und 25 Grad und Erde, die weder austrocknet noch nass bleibt. Auch etwas höhere Luftfeuchte findet sie gut.",
       "hashtags": [
         "#forellenbegonie",
         "#begoniamaculata"
@@ -306,7 +306,7 @@
       "format": "mythos",
       "expression": "cold",
       "image_text": "Mythos: Mehr Sonne ist besser.",
-      "caption": "Stimmt nicht. Viele Zimmerpflanzen stammen aus dem Unterholz und kennen nur gefiltertes Licht. Direkte Sonne kann Blätter verbrennen, erkennbar an hellbraunen, trockenen Flecken. Ein dünner Vorhang oder ein Platz einen Meter weiter weg schafft Abhilfe.",
+      "caption": "Stimmt nicht. Viele Zimmerpflanzen stammen aus dem Unterholz und kennen nur gefiltertes Licht. Direkte Sonne kann Blätter verbrennen, erkennbar an hellbraunen, trockenen Flecken. Ein dünner Vorhang oder ein Platz einen Meter weiter weg helfen schon.",
       "hashtags": [
         "#pflanzenmythos"
       ],
@@ -358,7 +358,7 @@
       "format": "mythos",
       "expression": "happy",
       "image_text": "Mythos: Pflanzen lieben Mozart.",
-      "caption": "Wissenschaftlich nicht belegt. Pflanzen haben keine Ohren, spüren aber Erschütterungen. Dein Guten Morgen schadet trotzdem nicht. Es hilft vor allem dir, öfter nach ihr zu schauen.",
+      "caption": "Wissenschaftlich nicht belegt. Pflanzen haben keine Ohren, spüren aber Erschütterungen. Ein freundliches Guten Morgen schadet trotzdem nicht. Es hilft vor allem dir, öfter nach deiner Pflanze zu schauen.",
       "hashtags": [
         "#pflanzenmythos"
       ]
@@ -763,7 +763,7 @@
           }
         ]
       },
-      "caption": "Siggi spart Energie. Bogenhanf kommen mit wenig Wasser und wenig Licht aus, das ist kein Zufall.",
+      "caption": "Siggi spart Energie. Bogenhanf kommt mit wenig Wasser und wenig Licht aus. Das ist kein Zufall.",
       "hashtags": [
         "#pflanzenwg",
         "#bogenhanf"
@@ -946,7 +946,7 @@
           },
           {
             "char": "siggi",
-            "text": "Vorhang. Hab ich gesagt."
+            "text": "Vorhang. Hab ich doch gesagt."
           }
         ]
       },
@@ -978,7 +978,7 @@
         "lines": [
           {
             "char": "knospi",
-            "text": "Ich sage Bescheid, wenn ich was brauche."
+            "text": "Ich sage Bescheid, wenn ich etwas brauche."
           },
           {
             "char": "pepe",
