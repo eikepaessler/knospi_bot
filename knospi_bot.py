@@ -1513,6 +1513,17 @@ def create_pool_draft(state, now, dry_run=False, rng=random):
 
 def publish_draft(draft, state, now):
     """Veröffentlicht einen freigegebenen Entwurf und aktualisiert Entwurf, Protokoll und Issue."""
+    # Bild und Text vor dem Posten aus dem aktuellen Pool neu erzeugen, damit ältere Entwürfe
+    # nicht mit altem Bild oder altem Text rausgehen.
+    entry = next((e for e in usable_pool(load_pool()) if e["id"] == draft.get("entry_id")), None)
+    if entry is not None:
+        image_path = DRAFTS_DIR / Path(draft["image"]).name
+        render_pool_image(entry, image_path)
+        draft["image_text"] = entry_image_text(entry)
+        draft["caption"] = compose_caption(entry, draft.get("used_cta", False))
+        save_draft(draft)
+        commit_paths([image_path, draft_json_path(draft["id"])], f"draft: {draft['id']} aktualisiert")
+        print(f"Entwurf '{draft['id']}' vor dem Posten neu gerendert.")
     url = public_raw_url(draft["image"])
     time.sleep(15)  # frisch committete Bilder brauchen einen Moment, bis raw.githubusercontent.com sie ausliefert
     result = post_feed_image(url, draft["caption"])
