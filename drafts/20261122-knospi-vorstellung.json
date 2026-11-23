@@ -1,7 +1,7 @@
 {
   "id": "20261122-knospi-vorstellung",
   "entry_id": "knospi-vorstellung",
-  "status": "approved",
+  "status": "published",
   "approved_at": "2026-11-22T10:00:57.416482+01:00",
   "created_at": "2026-11-22T10:00:57.416482+01:00",
   "format": "pflanzenmoment",
@@ -12,5 +12,5 @@
   "reason": "Sonntag-Slot · Säule Entertainment (zuletzt 50%, Wunsch 35%) · Format Pflanzenmoment · anderes Format als der Post davor · in den letzten 120 Tagen nicht verwendet · mit sanftem Aufruf (jeder dritte Post)",
   "used_cta": true,
   "issue_number": null,
-  "published_at": null
+  "published_at": "2026-11-23T07:00:55.570283+01:00"
 }

@@ -40,6 +40,12 @@
       "kind": "pool",
       "key": null,
       "id": "20261121-community-giessrunde"
+    },
+    {
+      "ts": "2026-11-23T07:00:55.570283+01:00",
+      "kind": "pool",
+      "key": null,
+      "id": "20261122-knospi-vorstellung"
     }
   ],
   "pool": {
