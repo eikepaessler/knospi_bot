@@ -1117,7 +1117,7 @@
       ]
     },
     {
-      "id": "knospi-vorstellung",
+      "id": "knospi-vorstellung-neu",
       "pillar": "entertainment",
       "format": "pflanzenmoment",
       "expression": "happy",
@@ -1128,7 +1128,7 @@
         "#pflanzenwg"
       ],
       "cta": "Sag Hallo in den Kommentaren.",
-      "priority": 7
+      "priority": 8
     },
     {
       "id": "wg-einzug-moni",
