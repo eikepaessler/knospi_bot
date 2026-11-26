@@ -1,7 +1,7 @@
 {
   "id": "20261126-knospi-vorstellung-neu",
   "entry_id": "knospi-vorstellung-neu",
-  "status": "approved",
+  "status": "published",
   "approved_at": "2026-11-26T10:01:06.656576+01:00",
   "created_at": "2026-11-26T10:01:06.656576+01:00",
   "format": "pflanzenmoment",
@@ -12,5 +12,5 @@
   "reason": "Donnerstag-Slot · Säule Entertainment (zuletzt 67%, Wunsch 35%) · Format Pflanzenmoment · in den letzten 120 Tagen nicht verwendet",
   "used_cta": false,
   "issue_number": null,
-  "published_at": null
+  "published_at": "2026-11-26T10:01:06.656576+01:00"
 }

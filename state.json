@@ -52,6 +52,12 @@
       "kind": "daily",
       "key": "soil",
       "state": "low"
+    },
+    {
+      "ts": "2026-11-26T10:01:06.656576+01:00",
+      "kind": "pool",
+      "key": null,
+      "id": "20261126-knospi-vorstellung-neu"
     }
   ],
   "pool": {
